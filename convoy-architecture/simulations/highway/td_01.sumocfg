@@ -1,0 +1,19 @@
+<configuration>
+   <input>
+       <net-file value="td_01.net.xml"/>
+       <route-files value="td_01.rou.xml"/>
+       <additional-files value="td_01.poly.xml"/>
+       <gui-settings-file value="td_01.gui.xml"/>
+   </input>
+   <time>
+      <begin value="100"/>
+      <end value="1000"/>
+      <step-length value="0.1"/>
+  </time>
+  <report>
+      <no-step-log value="true"/>
+  </report>
+  <gui_only>
+      <start value="true"/>
+  </gui_only>    
+</configuration>

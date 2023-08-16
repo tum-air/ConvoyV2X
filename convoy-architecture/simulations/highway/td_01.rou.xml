@@ -1,0 +1,14 @@
+<routes>
+    <vType id="normal_car" vClass="passenger" maxSpeed="40" speedFactor="0.9" speedDev="0.2" sigma="0.5" />
+    <vType id="sporty_car" vClass="passenger" maxSpeed="60" speedFactor="1.3" speedDev="0.1" sigma="0.1" />
+    <vType id="trailer" vClass="trailer"  maxSpeed="30" speedFactor="1.1" speedDev="0.1" />
+    <vType id="coach" vClass="coach"  maxSpeed="30" speedFactor="1." speedDev="0.1" />
+    <flow id="normal_right" type="normal_car" begin="0" end="5000" vehsPerHour="3600" from="left_entry" to="right_exit" departPos="last" departLane="best" departSpeed="max" />
+    <flow id="sporty_right" type="sporty_car" begin="0" end="5000" vehsPerHour="400" from="left_entry" to="right_exit" departPos="last" departLane="best" departSpeed="max"/>
+    <flow id="coach_right" type="coach" begin="0" end="5000" vehsPerHour="50" from="left_entry" to="right_exit" departPos="last" departLane="0" departSpeed="max"/>
+    <flow id="trailer_right" type="trailer" begin="0" end="5000" vehsPerHour="650" from="left_entry" to="right_exit" departPos="last" departLane="0" departSpeed="max"/>
+    <flow id="normal_left" type="normal_car" begin="0" end="5000" vehsPerHour="3600" from="right_entry" to="left_exit" departPos="last" departLane="best" departSpeed="max"/>
+    <flow id="sporty_left" type="sporty_car" begin="0" end="5000" vehsPerHour="400" from="right_entry" to="left_exit" departPos="last" departLane="best" departSpeed="max"/>
+    <flow id="coach_left" type="coach" begin="0" end="5000" vehsPerHour="50" from="right_entry" to="left_exit" departPos="last" departLane="0" departSpeed="max"/>
+    <flow id="trailer_left" type="trailer" begin="0" end="5000" vehsPerHour="650" from="right_entry" to="left_exit" departPos="last" departLane="0" departSpeed="max"/>
+</routes>
