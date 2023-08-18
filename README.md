@@ -22,3 +22,6 @@ The executable simulation runs are available in the folder `/convoy-architecture
 The usage of [OMNeT++](https://omnetpp.org), [Simu5G](https://github.com/Unipisa/Simu5G), [INET](https://github.com/inet-framework/inet), [VEINS](https://veins.car2x.org), and [SUMO](https://eclipse.dev/sumo/) libraries are governed by their licensing terms. Users are requested to read the terms and assure conformance before using these libraries.
 
 The remaining contents of this repository outside of the above library dependencies are provided for use under the GNU General Public License v3.0.
+
+## Disclaimer
+While the authors have taken utmost care to provide a reliable and accurate simulation framework, the software is provided "as is" and without any assurances. The authors are also not liable for any loss, expense or damage of any type that may arise by using this software.
