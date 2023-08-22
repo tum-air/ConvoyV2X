@@ -46,6 +46,36 @@ ConvoyControl::~ConvoyControl()
     cancelAndDelete(_localization_complete_trigger);
     cancelAndDelete(_publisher_list_update_trigger);
     cancelAndDelete(_run_mode_update_trigger);
+
+    // Delete associated cluster devices
+    if(_manager_module != nullptr)
+    {
+        if(_manager_module->isModule())
+        {
+            removeConnectionsToWrapperNode(_manager_module);
+            _manager_module->deleteModule();
+
+            // Inform binder
+            Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+            binder->deNotifyCluster(_manager_id);
+        }
+    }
+    if(_member_module != nullptr)
+    {
+        if(_member_module->isModule())
+        {
+            removeConnectionsToWrapperNode(_member_module);
+            _member_module->deleteModule();
+        }
+    }
+    if(_gateway_module != nullptr)
+    {
+        if(_gateway_module->isModule())
+        {
+            removeConnectionsToWrapperNode(_gateway_module);
+            _gateway_module->deleteModule();
+        }
+    }
 }
 
 void ConvoyControl::initialize()

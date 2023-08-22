@@ -26,7 +26,6 @@ WrapperNode::WrapperNode()
 WrapperNode::~WrapperNode()
 {
     cancelAndDelete(_setup_trigger_ccs_agent);
-    _ccs_agent->deleteModule();
 }
 
 void WrapperNode::initialize()
