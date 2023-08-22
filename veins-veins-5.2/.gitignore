@@ -10,6 +10,7 @@ doc/neddoc
 
 /bin/veins_run
 
+/bin
 /out
 
 examples/**/results

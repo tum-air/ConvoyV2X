@@ -1,0 +1,58 @@
+# ignore generated files
+src/**/*_m.h
+src/**/*_m.cc
+src/Makefile
+*.pcap
+*.sca
+*.vec
+*.vci
+*.anf
+*.qtenvrc
+.settings/
+err/
+src/err
+
+# ignore binary files
+out/
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+*.o
+*.obj
+*.pdb
+*.idb
+*.manifest
+.tkenvrc
+.tkenvlog
+*.out
+.computed
+
+# ignore backup and temp files
+*.bak
+backups
+*~
+*.log
+
+
+*.FAILED
+*.UPDATED
+*.ERROR
+.cproject
+.project
+
+# ignore result folders
+/simulations/*/results*/
+/simulations/*/eval*/
+*.rt
+*.elog
+
+# vim files
+*.swp
+*.swo
+.qtenvrc.*
+
+# project file 
+.cproject

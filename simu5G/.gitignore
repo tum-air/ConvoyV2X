@@ -16,6 +16,7 @@ err/
 src/err
 
 # ignore binary files
+bin/
 out/
 *.so
 *.dylib
