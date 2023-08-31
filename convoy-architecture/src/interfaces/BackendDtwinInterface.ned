@@ -15,95 +15,41 @@
 
 package convoy_architecture.interfaces;
 
-import inet.networklayer.common.InterfaceTable;
-import inet.networklayer.contract.INetworkLayer;
-import inet.common.MessageDispatcher;
-import inet.transportlayer.udp.Udp;
+import convoy_architecture.stores.DtwinStore;
+import convoy_architecture.interfaces.BackendMessaging;
+import inet.node.base.TransportLayerNodeBase;
 import inet.applications.udpapp.UdpSocketIo;
-import inet.linklayer.ethernet.contract.IEthernetLayer;
-import inet.linklayer.contract.IEthernetInterface;
+import inet.common.MessageDispatcher;
 
-module BackendDtwinInterface
+module BackendDtwinInterface extends TransportLayerNodeBase
 {
     parameters:
+        @display("i=block/ifcard;bgb=2500,1200;is=vs");
         @networkNode();
-        @display("bgb=700,750;i=block/ifcard;is=s");
-        string IPv4Type = default("Ipv4NetworkLayer");
-        string extHostAddress = default("");
-        string hostConfigurator = default("HostAutoConfigurator");
+        hasUdp = true;
+        hasTcp = false;
+        hasIpv4 = true;
+        forwarding = true;
+        numLoInterfaces = 0;
+        numEthInterfaces = default(1);
         *.interfaceTableModule = default(absPath(".interfaceTable"));
-        *.routingTableModule = default(absPath(".ipv4.routingTable"));
     gates:
-        inout ethg;
-        input fromAppDtwinPub;
-        output toAppDtwinPub;
+        input inAppDtwin;
     submodules:
-        interfaceTable: InterfaceTable {
-                @display("p=100,525;is=s");
-        }
-        ipv4: <IPv4Type> like INetworkLayer {
-            parameters:
-                @display("p=350,375;is=n");
-                configurator.typename = parent.hostConfigurator;
-                configurator.interfaces ="eth";
-        }
-        dispatcher_nl: MessageDispatcher {
-            parameters:
-                @display("p=350,450;b=200,5,,,,1");
-        }
-        dispatcher_tl: MessageDispatcher {
-            parameters:
-                @display("p=350,300;b=200,5,,,,1");
-        }
-        udp: Udp {
-            parameters:
-                @display("p=350,225");
+        ioAppDtwin: UdpSocketIo {
+            @display("p=375,80;is=s");
+            localPort = 31000;
+            destPort = 31000;
         }
         dispatcher_al: MessageDispatcher {
             parameters:
-                @display("p=350,150;b=200,5,,,,1");
-        }
-        ioAppDtwinPub: UdpSocketIo {
-                @display("p=350,75;is=s");
-                localPort = 31001;
-                destPort = 31001;
-        }
-        ethernet: <"EthernetEncapsulation"> like IEthernetLayer {
-            @display("p=350,525");
-        }
-        dispatcher_ll: MessageDispatcher {
-            parameters:
-                @display("p=350,600;b=200,5,,,,1");
-        }
-        eth: <"EthernetInterface"> like IEthernetInterface {
-            bitrate = 10Gbps;
-            @display("p=350,675");
+                @display("p=375,160;b=200,5,,,,1");
         }
     connections allowunconnected:
-        // ethernet layer
-        ethg <--> { @display("m=s"); } <--> eth.phys;
-        eth.upperLayerOut --> dispatcher_ll.in++;
-        eth.upperLayerIn <-- dispatcher_ll.out++;
-        ethernet.lowerLayerOut --> dispatcher_ll.in++;
-        dispatcher_ll.out++ --> ethernet.lowerLayerIn;
-        
-        // network layer
-        ipv4.ifIn <-- dispatcher_nl.out++;
-        ipv4.ifOut --> dispatcher_nl.in++;
-        dispatcher_nl.out++ --> ethernet.upperLayerIn;
-        ethernet.upperLayerOut --> dispatcher_nl.in++;
-        
-        // transport layer
-        udp.ipOut --> dispatcher_tl.in++;
-        udp.ipIn <-- dispatcher_tl.out++;
-        dispatcher_tl.out++ --> ipv4.transportIn;
-        dispatcher_tl.in++ <-- ipv4.transportOut;
-        
         // application layer
         dispatcher_al.out++ --> udp.appIn;
         dispatcher_al.in++ <-- udp.appOut;
-
-        ioAppDtwinPub.socketOut --> dispatcher_al.in++;
-        ioAppDtwinPub.trafficOut --> toAppDtwinPub;
-        fromAppDtwinPub --> ioAppDtwinPub.trafficIn;
+        ioAppDtwin.socketOut --> dispatcher_al.in++;
+        ioAppDtwin.socketIn <-- dispatcher_al.out++;
+        inAppDtwin --> ioAppDtwin.trafficIn;
 }

@@ -45,7 +45,7 @@ module WrapperNode
         double detectorFovLimitRange @unit(m) = default(100m);
         double detectorFovLimitAngleMin @unit(rad) = default(-3.14rad);
         double detectorFovLimitAngleMax @unit(rad) = default(3.14rad);
-        string backend_interface_name = (convoyDirection < 2)? "backend_interface_top" : "backend_interface_bot";
+        string backend_interface_name = (convoyDirection < 2)? "backend_top" : "backend_bot";
         string subscriberType @mutable = default("v2i");
         @display("i=device/server;bgb=500,300;is=s");
         @class(convoy_architecture::WrapperNode);
@@ -118,5 +118,6 @@ module WrapperNode
 		dtwinStore.in <-- appTracker.dtwinCollective if hasTracker;
 		dtwinStore.in <-- appDtwinSub.out_dtwin if (!hasTracker) && hasDtwinSub;
 		
-		appDtwinPub.out_bknd --> outAppDtwinPubBknd if hasDtwinPub;
+		appDtwinPub.out_bknd --> bmsAgent.inUl if hasDtwinPub;
+		bmsAgent.outLl --> outAppDtwinPubBknd if hasDtwinPub;
 }

@@ -48,29 +48,13 @@ class TestWorld : public omnetpp::cSimpleModule
     std::vector<omnetpp::cModule*> _sensor_station;
     omnetpp::cMessage* _setup_trigger_top;
     omnetpp::cMessage* _setup_trigger_bot;
-    omnetpp::cMessage* _setup_trigger_bknd;
     omnetpp::cMessage* _heartbeat_trigger;
-    omnetpp::cModule* _bknd_switch_top;
-    omnetpp::cModule* _bknd_interface_top;
-    omnetpp::cChannel* _bknd_eth_chnl_1_top;
-    omnetpp::cChannel* _bknd_eth_chnl_2_top;
-    omnetpp::cModule* _bknd_module_top;
-    omnetpp::cModule* _bknd_switch_bot;
-    omnetpp::cModule* _bknd_interface_bot;
-    omnetpp::cChannel* _bknd_eth_chnl_1_bot;
-    omnetpp::cChannel* _bknd_eth_chnl_2_bot;
-    omnetpp::cModule* _bknd_module_bot;
-    std::vector<omnetpp::cModule*> _station_backend_interface;
-    std::vector<omnetpp::cChannel*> _station_eth_chnl_1;
-    std::vector<omnetpp::cChannel*> _station_eth_chnl_2;
   protected:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;
     void drawRoad(std::string, double, double, double, double);
     void setupSensorstation(int, ConvoyDirection);
     void createInitSensorStation(int, double, double, ConvoyDirection);
-    void setupBackendTop();
-    void setupBackendDown();
     void setupStationBackendInterface(int, ConvoyDirection);
   public:
     TestWorld();

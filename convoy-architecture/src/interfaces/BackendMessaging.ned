@@ -23,8 +23,8 @@ simple BackendMessaging
     parameters:
         @display("i=block/control");
         @class("convoy_architecture::BackendMessaging");
-        string destinationModule = default("backend_interface_top");
-        int destinationPort = default(31001);
+        string destinationModule = default("backend_top");
+        int destinationPort = default(31000);
     gates:
         input inUl;
         input inLl;

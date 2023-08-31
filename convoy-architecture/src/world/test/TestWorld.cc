@@ -60,8 +60,7 @@ void TestWorld::initialize()
     _counter_station = 0;
     _setup_trigger_top = new omnetpp::cMessage("setup_sensor_station_top");
     _setup_trigger_bot = new omnetpp::cMessage("setup_sensor_station_bot");
-    _setup_trigger_bknd = new omnetpp::cMessage("setup_backend");
-    scheduleAt(omnetpp::simTime(), _setup_trigger_bknd);
+    scheduleAt(omnetpp::simTime(), _setup_trigger_top);
 
     _heartbeat_trigger = new omnetpp::cMessage("heartbeat");
     scheduleAfter(_heartbeat_interval, _heartbeat_trigger);
@@ -69,12 +68,6 @@ void TestWorld::initialize()
 
 void TestWorld::handleMessage(omnetpp::cMessage *msg)
 {
-    if(msg == _setup_trigger_bknd)
-    {
-        setupBackendTop();
-        setupBackendDown();
-        scheduleAt(omnetpp::simTime(), _setup_trigger_top);
-    }
     if(msg == _setup_trigger_top)
     {
         setupSensorstation(_counter_station, ConvoyDirection::TOP);
@@ -182,68 +175,22 @@ void TestWorld::createInitSensorStation(int station_id, double x, double y, Conv
     _sensor_station.push_back(module);
 }
 
-void TestWorld::setupBackendTop()
-{
-    // Work out location
-    double x = par("backend_top_x").doubleValue();
-    double y = par("backend_top_y").doubleValue();
-
-    // Instantiate and setup backend module
-    std::string module_type_name = std::string("convoy_architecture.nodes.Backend");
-    omnetpp::cModuleType *module_type = omnetpp::cModuleType::get(module_type_name.c_str());
-    _bknd_module_top = module_type->create("backend_top", getParentModule());
-
-    // Set position
-    omnetpp::cDisplayString display_string = _bknd_module_top->getDisplayString();
-    display_string.setTagArg("p", 0, x);
-    display_string.setTagArg("p", 1, y);
-    _bknd_module_top->setDisplayString(display_string.str());
-    _bknd_module_top->setDisplayName(nullptr);
-
-    // Connect and finalize module
-    _bknd_module_top->finalizeParameters();
-    _bknd_module_top->buildInside();
-    _bknd_module_top->scheduleStart(omnetpp::simTime());
-    _bknd_module_top->callInitialize();
-}
-
-void TestWorld::setupBackendDown()
-{
-    // Work out location
-        double x = par("backend_bot_x").doubleValue();
-        double y = par("backend_bot_y").doubleValue();
-
-        // Instantiate and setup backend module
-        std::string module_type_name = std::string("convoy_architecture.nodes.Backend");
-        omnetpp::cModuleType *module_type = omnetpp::cModuleType::get(module_type_name.c_str());
-        _bknd_module_bot = module_type->create("backend_down", getParentModule());
-
-        // Set position
-        omnetpp::cDisplayString display_string = _bknd_module_bot->getDisplayString();
-        display_string.setTagArg("p", 0, x);
-        display_string.setTagArg("p", 1, y);
-        _bknd_module_bot->setDisplayString(display_string.str());
-        _bknd_module_bot->setDisplayName(nullptr);
-
-        // Connect and finalize module
-        _bknd_module_bot->finalizeParameters();
-        _bknd_module_bot->buildInside();
-        _bknd_module_bot->scheduleStart(omnetpp::simTime());
-        _bknd_module_bot->callInitialize();
-}
-
 void TestWorld::setupStationBackendInterface(int station_id, ConvoyDirection direction)
 {
+    omnetpp::cModule *bk_if_module;
     switch(direction)
     {
     case ConvoyDirection::TOP:
-        _sensor_station.back()->gate("outAppDtwinPubBknd")->connectTo(_bknd_module_top->gate("inAppDtwinPub", station_id));
+        bk_if_module = getParentModule()->getSubmodule("bk_if_top", station_id);
         break;
     case ConvoyDirection::DOWN:
-        _sensor_station.back()->gate("outAppDtwinPubBknd")->connectTo(_bknd_module_bot->gate("inAppDtwinPub", station_id));
+        bk_if_module = getParentModule()->getSubmodule("bk_if_bot", station_id);
         break;
     default:
         break;
     }
+
+    // Connect sensor station to backend interface
+    _sensor_station.back()->gate("outAppDtwinPubBknd")->connectTo(bk_if_module->gate("inAppDtwin"));
 }
 } // namespace convoy_architecture

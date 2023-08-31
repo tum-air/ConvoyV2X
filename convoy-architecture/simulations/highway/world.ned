@@ -23,7 +23,10 @@ import simu5g.common.binder.Binder;
 import simu5g.common.carrierAggregation.CarrierAggregation;
 import inet.networklayer.ipv4.RoutingTableRecorder;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
+import convoy_architecture.nodes.Backend;
 import convoy_architecture.interfaces.BackendDtwinInterface;
+import inet.node.ethernet.EthernetSwitch;
+import inet.node.ethernet.Eth10G;
 
 network world
 {
@@ -61,18 +64,36 @@ network world
             config = xmldoc("ip_config.xml");
         }
         
-//        backend_interface_top: BackendDtwinInterface {
-//            @display("p=2350,130;is=s");
-//        }
-//        backend_interface_bot: BackendDtwinInterface {
-//            @display("p=2350,320;is=s");
-//        }
-//        st_bknd_intf_top[15]: BackendDtwinInterface {
-//            @display("p=405,150,r,300");
-//        }
-//        st_bknd_intf_bot[15]: BackendDtwinInterface {
-//            @display("p=405,300,r,300");
-//        }
-//        
-//    connections allowunconnected:
+        backend_top: Backend {
+            @display("p=2350,110;is=s");
+        }
+        backend_bot: Backend {
+            @display("p=2350,340;is=s");
+        }
+        
+        switch_top: EthernetSwitch {
+            numEthInterfaces = parent.n_stations + 1;
+            @display("p=2350,130;is=s");
+        }
+        switch_bot: EthernetSwitch {
+            numEthInterfaces = parent.n_stations + 1;
+            @display("p=2350,320;is=s");
+        }
+        
+        bk_if_top[n_stations]: BackendDtwinInterface {
+            @display("p=405,130,row,300;is=vs");
+        }
+        
+        bk_if_bot[n_stations]: BackendDtwinInterface {
+            @display("p=405,320,row,300;is=vs");
+        }
+        
+    connections allowunconnected:
+        backend_top.ethg[0] <--> Eth10G <--> switch_top.ethg[0];
+        backend_bot.ethg[0] <--> Eth10G <--> switch_bot.ethg[0];
+        
+        for i=0..(n_stations-1) {
+            bk_if_top[i].ethg[0] <--> Eth10G <--> switch_top.ethg[i+1];
+            bk_if_bot[i].ethg[0] <--> Eth10G <--> switch_bot.ethg[i+1];
+        }
 }
