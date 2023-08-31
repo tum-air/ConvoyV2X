@@ -43,7 +43,7 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
         else if(msg->arrivedOn("inLl"))
         {
             EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin message from lower layer" << std::endl;
-            handleDtwinFromUl(msg);
+            handleDtwinFromLl(msg);
             delete msg;
         }
     }

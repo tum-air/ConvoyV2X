@@ -17,30 +17,44 @@ package convoy_architecture.nodes;
 
 import convoy_architecture.stores.DtwinStore;
 import convoy_architecture.interfaces.BackendMessaging;
-import convoy_architecture.interfaces.MultipleInputSingleOutput;
+import inet.node.base.TransportLayerNodeBase;
+import inet.applications.udpapp.UdpSocketIo;
+import inet.common.MessageDispatcher;
 
-module Backend
+module Backend extends TransportLayerNodeBase
 {
     parameters:
-        @display("i=device/server;bgb=300,300;is=s");
-        int n_stations = default(15);
-    gates:
-        input inAppDtwinPub[n_stations];
+        @display("i=device/server;bgb=2500,1200;is=s");
+        @networkNode();
+        hasUdp = true;
+        hasTcp = false;
+        hasIpv4 = true;
+        numLoInterfaces = 0;
+        numEthInterfaces = default(1);
+        *.interfaceTableModule = default(absPath(".interfaceTable"));
     submodules:
-        ipModule: MultipleInputSingleOutput {
-            nInputGates = parent.n_stations;
-            @display("p=150,250");
-        }
         bmsAgent: BackendMessaging {
-            @display("p=250,150");
+            @display("p=375,20;is=s");
         }
         dtwinStore: DtwinStore {
-            @display("p=150,50");
+            @display("p=250,20");
+        }
+        ioAppDtwin: UdpSocketIo {
+            @display("p=375,80;is=s");
+            localPort = 31000;
+            destPort = 31000;
+        }
+        dispatcher_al: MessageDispatcher {
+            parameters:
+                @display("p=375,160;b=200,5,,,,1");
         }
     connections allowunconnected:
-        for i=0..n_stations-1
-        {
-        	inAppDtwinPub[i] --> ipModule.in[i];
-        }
-        ipModule.out --> dtwinStore.in;
+        // application layer
+        dispatcher_al.out++ --> udp.appIn;
+        dispatcher_al.in++ <-- udp.appOut;
+        ioAppDtwin.socketOut --> dispatcher_al.in++;
+        ioAppDtwin.socketIn <-- dispatcher_al.out++;
+        bmsAgent.outLl --> ioAppDtwin.trafficIn;
+        ioAppDtwin.trafficOut --> bmsAgent.inLl;
+        bmsAgent.outUl --> dtwinStore.in;
 }

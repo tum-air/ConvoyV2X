@@ -1,11 +1,5 @@
 <config>
-	<interface hosts="backend_interface_top" names="eth" address="192.168.10.1"/>
-	<interface hosts="backend_interface_bot" names="eth" address="192.168.20.1"/>
-	<interface hosts="st_bknd_intf_top[*]" names="eth" address="192.168.10.x"/>
-	<interface hosts="st_bknd_intf_bot[*]" names="eth" address="192.168.20.x"/>
-	<interface hosts="d1rsu[*]" names="eth" address="192.168.100.x"/>
-	<interface hosts="d2rsu[*]" names="eth" address="192.168.200.x"/>
-	<interface hosts='*' address='10.x.x.x' netmask='255.255.255.0'/>
-	
-	<!-- <route hosts="st_bknd_intf_bot[*]" destination="192.168.20.1" netmask="255.255.255.255" interface="eth"/>  -->
+	<interface hosts="backend_top bk_if_top[*]" address="192.168.100.x" netmask="255.255.255.x"/>
+	<interface hosts="backend_bot bk_if_bot[*]" address="192.168.200.x" netmask="255.255.255.x"/>
+	<interface hosts='*' names="cellular" address="10.x.x.x" netmask="255.255.255.0"/>
 </config>
