@@ -34,6 +34,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
 OBJS = \
+    $O/apps/ConvoyOrchestration.o \
     $O/apps/CooperativeManeuver.o \
     $O/apps/Detector.o \
     $O/apps/DtwinPublisher.o \

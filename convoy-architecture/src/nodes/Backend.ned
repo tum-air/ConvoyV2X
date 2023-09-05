@@ -20,11 +20,12 @@ import convoy_architecture.interfaces.BackendMessaging;
 import inet.node.base.TransportLayerNodeBase;
 import inet.applications.udpapp.UdpSocketIo;
 import inet.common.MessageDispatcher;
+import convoy_architecture.apps.ConvoyOrchestration;
 
 module Backend extends TransportLayerNodeBase
 {
     parameters:
-        @display("i=device/server;bgb=2500,1200;is=s");
+        @display("i=device/server;bgb=1300,1200;is=s");
         @networkNode();
         hasUdp = true;
         hasTcp = false;
@@ -34,19 +35,27 @@ module Backend extends TransportLayerNodeBase
         *.interfaceTableModule = default(absPath(".interfaceTable"));
     submodules:
         bmsAgent: BackendMessaging {
-            @display("p=375,20;is=s");
+            @display("p=250,20;is=s");
         }
         dtwinStore: DtwinStore {
-            @display("p=250,20");
+            @display("p=375,20");
         }
         ioAppDtwin: UdpSocketIo {
-            @display("p=375,80;is=s");
+            @display("p=250,80;is=s");
             localPort = 31000;
             destPort = 31000;
         }
         dispatcher_al: MessageDispatcher {
             parameters:
                 @display("p=375,160;b=200,5,,,,1");
+        }
+        ioAppConvoyOrch: UdpSocketIo {
+            @display("p=500,80;is=s");
+            localPort = 41000;
+            destPort = 41000;
+        }
+        appConvoyOrch: ConvoyOrchestration {
+            @display("p=500,20;is=s");
         }
     connections allowunconnected:
         // application layer
@@ -57,4 +66,8 @@ module Backend extends TransportLayerNodeBase
         bmsAgent.outLl --> ioAppDtwin.trafficIn;
         ioAppDtwin.trafficOut --> bmsAgent.inLl;
         bmsAgent.outUl --> dtwinStore.in;
+        ioAppConvoyOrch.socketOut --> dispatcher_al.in++;
+        ioAppConvoyOrch.socketIn <-- dispatcher_al.out++;
+        appConvoyOrch.out --> ioAppConvoyOrch.trafficIn;
+        ioAppConvoyOrch.trafficOut --> appConvoyOrch.in;
 }
