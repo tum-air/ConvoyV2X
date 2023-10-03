@@ -24,6 +24,9 @@ simple ConvoyOrchestration
         @application;
         @display("i=block/network2;is=s");
         @class("convoy_architecture::ConvoyOrchestration");
+        double startTime @unit(s) = default(70.000s);
+        double stopTime @unit(s) = default(1000.000s);
+        double updateRate @unit(s) = default(5.000s);
     gates:
         input in;
         output out;

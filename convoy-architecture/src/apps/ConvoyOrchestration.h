@@ -17,6 +17,8 @@
 #define __CONVOY_ARCHITECTURE_CONVOYORCHESTRATION_H_
 
 #include <omnetpp.h>
+#include "stores/DtwinStore.h"
+#include "messages/ObjectList_m.h"
 
 namespace convoy_architecture {
 
@@ -25,9 +27,20 @@ namespace convoy_architecture {
  */
 class ConvoyOrchestration : public omnetpp::cSimpleModule
 {
+  private:
+    omnetpp::simtime_t _start_time;
+    omnetpp::simtime_t _stop_time;
+    omnetpp::simtime_t _update_rate;
+    omnetpp::cMessage* _start_event;
+    omnetpp::cMessage* _update_event;
+    DtwinStore* _dtwin_store;
+    ObjectList* _dtwin;
   protected:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;
+  public:
+      ~ConvoyOrchestration();
+      ConvoyOrchestration();
 };
 
 } // namespace convoy_architecture

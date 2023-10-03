@@ -94,6 +94,10 @@ void DtwinPublisher::sendDtwinMessage(ObjectList *dtwin_message)
     int n_objects = dtwin_message->getN_objects();
     if(n_objects > 0)
     {
+        /* TODO dtwin for convoy orchestration at backend */
+        /* Include only those objects which are also V2X capable */
+        /* Possible implementation - check for object presence in subscriber list */
+        /* Alternate implementation - maintain separate subscriber store and read from store */
         this->send(dtwin_message->dup(), "out_bknd");
         this->send(dtwin_message, "out");
         EV_INFO << current_time <<" - DtwinPublisher::sendDtwinMessage(): " << "Sent out dtwin message with n_objects = " << n_objects << std::endl;

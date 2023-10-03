@@ -18,6 +18,7 @@ import inet.common.packet.chunk.Chunk;
 import messages.ObjectList;
 import messages.DtwinSub;
 import messages.CoopManeuver;
+import messages.ConvoyControlService;
 
 class MCSPacket extends inet::FieldsChunk
 {
@@ -32,4 +33,5 @@ class MCSPacket extends inet::FieldsChunk
     convoy_architecture::DtwinSub msg_dtwin_sub;
     convoy_architecture::ObjectList msg_dtwin_pub;
     convoy_architecture::CoopManeuver msg_coop_man;
+    convoy_architecture::ConvoyControlService msg_ccs;
 }
