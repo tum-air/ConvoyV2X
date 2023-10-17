@@ -27,6 +27,7 @@ simple ConvoyOrchestration
         double startTime @unit(s) = default(70.000s);
         double stopTime @unit(s) = default(1000.000s);
         double updateRate @unit(s) = default(5.000s);
+        int convoyDirection = default(0);
     gates:
         input in;
         output out;

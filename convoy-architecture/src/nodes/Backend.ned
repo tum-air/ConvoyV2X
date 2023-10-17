@@ -27,6 +27,7 @@ module Backend extends TransportLayerNodeBase
     parameters:
         @display("i=device/server;bgb=1300,1200;is=s");
         @networkNode();
+        int convoyDirection = default(0);
         hasUdp = true;
         hasTcp = false;
         hasIpv4 = true;
@@ -56,6 +57,7 @@ module Backend extends TransportLayerNodeBase
         }
         appConvoyOrch: ConvoyOrchestration {
             @display("p=500,20;is=s");
+            convoyDirection = parent.convoyDirection;
         }
     connections allowunconnected:
         // application layer

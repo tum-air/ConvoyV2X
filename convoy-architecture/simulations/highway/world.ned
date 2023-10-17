@@ -66,9 +66,11 @@ network world
         
         backend_top: Backend {
             @display("p=2350,110;is=s");
+            convoyDirection = 1;
         }
         backend_bot: Backend {
             @display("p=2350,340;is=s");
+            convoyDirection = 2;
         }
         
         switch_top: EthernetSwitch {

@@ -19,6 +19,9 @@
 #include <omnetpp.h>
 #include "stores/DtwinStore.h"
 #include "messages/ObjectList_m.h"
+#include "veins_inet/VeinsInetMobility.h"
+#include "messages/ConvoyControlService_m.h"
+#include "common/defs.h"
 
 namespace convoy_architecture {
 
@@ -35,9 +38,19 @@ class ConvoyOrchestration : public omnetpp::cSimpleModule
     omnetpp::cMessage* _update_event;
     DtwinStore* _dtwin_store;
     ObjectList* _dtwin;
+    std::vector<std::string> _orch_ip_node_id;
+    std::vector<inet::Coord> _orch_ip_node_pos;
+    std::vector<std::string> _orch_op_node_id;
+    std::vector<ConvoyControlService*> _orch_op_node_cc;
+    ConvoyDirection _convoy_direction;
+
   protected:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;
+    void formatInput();
+    void computeOutput();
+    void transferOutput();
+    std::vector<ConvoyControlService*> executeOrchestrationStep(std::vector<inet::Coord>);
   public:
       ~ConvoyOrchestration();
       ConvoyOrchestration();

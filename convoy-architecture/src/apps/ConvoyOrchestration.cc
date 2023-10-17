@@ -41,6 +41,7 @@ void ConvoyOrchestration::initialize()
     _start_time = par("startTime").doubleValue();
     _stop_time = par("stopTime").doubleValue();
     _update_rate = par("updateRate").doubleValue();
+    _convoy_direction = static_cast<ConvoyDirection>(par("convoyDirection").intValue());
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
@@ -74,9 +75,18 @@ void ConvoyOrchestration::handleMessage(omnetpp::cMessage *msg)
             // 1. Read current digital twin from store
             _dtwin = _dtwin_store->readFromStore();
 
-            // 2. Prepare data for orchestration decision, input: vehicle and sensor station positions
-            // 3. Perform orchestration step, output: map of node - ccs message
+            // 2. Prepare data for orchestration decision
+            formatInput();
+
+            // 3. Perform orchestration step
+            computeOutput();
+
             // 4. Send out ccs messages
+            transferOutput();
+
+            // 5. Clear dtwin data for next cycle
+            if(_dtwin != nullptr)
+                delete _dtwin;
         }
         scheduleAfter(_update_rate, _update_event);
     }
@@ -86,6 +96,69 @@ void ConvoyOrchestration::handleMessage(omnetpp::cMessage *msg)
         EV_INFO << current_time <<" - ConvoyOrchestration::handleMessage(): " << "Stopping convoy orchestration application" << std::endl;
         cancelEvent(_update_event);
     }
+}
+
+void ConvoyOrchestration::formatInput()
+{
+    _orch_ip_node_id.clear();
+    _orch_ip_node_pos.clear();
+
+    // prepare data for vehicular objects
+    int n_vehicles = _dtwin->getN_objects();
+    for(int index=0; index<n_vehicles; index++)
+    {
+        _orch_ip_node_id.push_back(_dtwin->getObject_id(index));
+        inet::Coord pos;
+        pos.x = _dtwin->getObject_position_x(index);
+        pos.y = _dtwin->getObject_position_y(index);
+        _orch_ip_node_pos.push_back(pos);
+    }
+
+    // append sensor station device information
+    std::string station_base_id = std::string("d") + std::to_string((int)_convoy_direction) + std::string("rsu");
+    omnetpp::cModule* system_module = getSimulation()->getSystemModule();
+    if(system_module->hasSubmoduleVector(station_base_id.c_str()))
+    {
+        int n_stations = system_module->getSubmoduleVectorSize(station_base_id.c_str());
+        for(int index=0; index<n_stations; index++)
+        {
+            omnetpp::cModule* station_module = system_module->getSubmodule(station_base_id.c_str(), index);
+            inet::IMobility* station_mobility_module = check_and_cast<inet::IMobility*>(station_module->getSubmodule("mobility"));
+            inet::Coord pos = station_mobility_module->getCurrentPosition();
+            _orch_ip_node_id.push_back(std::string(station_module->getFullName()));
+            _orch_ip_node_pos.push_back(pos);
+        }
+    }
+}
+
+void ConvoyOrchestration::computeOutput()
+{
+    _orch_op_node_id.clear();
+    _orch_op_node_cc.clear();
+
+    _orch_op_node_cc = executeOrchestrationStep(_orch_ip_node_pos);
+    _orch_op_node_id = _orch_ip_node_id;
+}
+
+std::vector<ConvoyControlService*> ConvoyOrchestration::executeOrchestrationStep(std::vector<inet::Coord> node_pos)
+{
+    std::vector<ConvoyControlService*> orchestration_op;
+
+    // TODO implement the orchestration strategy
+    for(int node_index=0; node_index<_orch_ip_node_id.size(); node_index++)
+    {
+        ConvoyControlService *cc_op = new ConvoyControlService();
+        cc_op->setNode_id(_orch_ip_node_id.at(node_index).c_str());
+        orchestration_op.push_back(cc_op);
+    }
+
+    return(orchestration_op);
+}
+
+void ConvoyOrchestration::transferOutput()
+{
+    for(int node_index=0; node_index<_orch_op_node_cc.size(); node_index++)
+        send(_orch_op_node_cc.at(node_index), "out");
 }
 
 } // namespace convoy_architecture
