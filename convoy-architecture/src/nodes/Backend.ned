@@ -34,12 +34,14 @@ module Backend extends TransportLayerNodeBase
         numLoInterfaces = 0;
         numEthInterfaces = default(1);
         *.interfaceTableModule = default(absPath(".interfaceTable"));
+        mobility.typename = default("StationaryMobility");
+        string detectorStationType = default("rsu");
     submodules:
         bmsAgent: BackendMessaging {
-            @display("p=250,20;is=s");
+            @display("p=375,20;is=s");
         }
         dtwinStore: DtwinStore {
-            @display("p=375,20");
+            @display("p=250,20");
         }
         ioAppDtwin: UdpSocketIo {
             @display("p=250,80;is=s");
@@ -65,11 +67,13 @@ module Backend extends TransportLayerNodeBase
         dispatcher_al.in++ <-- udp.appOut;
         ioAppDtwin.socketOut --> dispatcher_al.in++;
         ioAppDtwin.socketIn <-- dispatcher_al.out++;
-        bmsAgent.outLl --> ioAppDtwin.trafficIn;
-        ioAppDtwin.trafficOut --> bmsAgent.inLl;
-        bmsAgent.outUl --> dtwinStore.in;
+        bmsAgent.outLlDtwin --> ioAppDtwin.trafficIn;
+        ioAppDtwin.trafficOut --> bmsAgent.inLlDtwin;
+        bmsAgent.outUlDtwin --> dtwinStore.in;
         ioAppConvoyOrch.socketOut --> dispatcher_al.in++;
         ioAppConvoyOrch.socketIn <-- dispatcher_al.out++;
-        appConvoyOrch.out --> ioAppConvoyOrch.trafficIn;
-        ioAppConvoyOrch.trafficOut --> appConvoyOrch.in;
+        appConvoyOrch.out --> bmsAgent.inUlConvoyOrch;
+        bmsAgent.outLlConvoyOrch --> ioAppConvoyOrch.trafficIn;
+        bmsAgent.outUlConvoyOrch --> appConvoyOrch.in;
+        ioAppConvoyOrch.trafficOut --> bmsAgent.inLlConvoyOrch;
 }

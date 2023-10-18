@@ -96,7 +96,7 @@ module WrapperNode
         }
         bmsAgent: BackendMessaging if hasDtwinPub {
             @display("p=100,250;is=s");
-            destinationModule = parent.backend_interface_name;
+            destinationModuleDtwin = parent.backend_interface_name;
         }
     connections allowunconnected:
         mcsAgent.outLlAppDtwinPub --> outAppDtwinPub;
@@ -118,6 +118,6 @@ module WrapperNode
 		dtwinStore.in <-- appTracker.dtwinCollective if hasTracker;
 		dtwinStore.in <-- appDtwinSub.out_dtwin if (!hasTracker) && hasDtwinSub;
 		
-		appDtwinPub.out_bknd --> bmsAgent.inUl if hasDtwinPub;
-		bmsAgent.outLl --> outAppDtwinPubBknd if hasDtwinPub;
+		appDtwinPub.out_bknd --> bmsAgent.inUlDtwin if hasDtwinPub;
+		bmsAgent.outLlDtwin --> outAppDtwinPubBknd if hasDtwinPub;
 }

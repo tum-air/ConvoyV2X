@@ -30,6 +30,8 @@ class BackendMessaging : public omnetpp::cSimpleModule
     virtual void handleMessage(omnetpp::cMessage *msg) override;
     void handleDtwinFromUl(omnetpp::cMessage *msg);
     void handleDtwinFromLl(omnetpp::cMessage *msg);
+    void handleConvoyOrchFromUl(omnetpp::cMessage *msg);
+    void handleConvoyOrchFromLl(omnetpp::cMessage *msg);
 };
 
 } // namespace convoy_architecture

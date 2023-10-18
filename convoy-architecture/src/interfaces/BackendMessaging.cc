@@ -34,13 +34,13 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
     omnetpp::simtime_t current_time = omnetpp::simTime();
     if(!msg->isSelfMessage())
     {
-        if(msg->arrivedOn("inUl"))
+        if(msg->arrivedOn("inUlDtwin"))
         {
             EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin message from upper layer" << std::endl;
             handleDtwinFromUl(msg);
             delete msg;
         }
-        else if(msg->arrivedOn("inLl"))
+        else if(msg->arrivedOn("inLlDtwin"))
         {
             EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin message from lower layer" << std::endl;
             handleDtwinFromLl(msg);
@@ -65,14 +65,14 @@ void BackendMessaging::handleDtwinFromUl(omnetpp::cMessage *msg)
     packet->insertAtBack(mcs_packet);
 
     // Set packet destination for next hop address
-    inet::L3Address destination_address = inet::L3AddressResolver().resolve(par("destinationModule"));
+    inet::L3Address destination_address = inet::L3AddressResolver().resolve(par("destinationModuleDtwin"));
     auto addressReq = packet->addTagIfAbsent<inet::L3AddressReq>();
     addressReq->setDestAddress(destination_address);
     auto portReq = packet->addTagIfAbsent<inet::L4PortReq>();
-    portReq->setDestPort(par("destinationPort").intValue());
+    portReq->setDestPort(par("destinationPortDtwin").intValue());
 
     EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromUl(): sending mcs packet to backend interface device" << std::endl;
-    send(packet, "outLl");
+    send(packet, "outLlDtwin");
 }
 
 void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
@@ -84,6 +84,16 @@ void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
 
     // Forward dtwin message to application layer
     ObjectList *msg_dtwin_pub = mcs_packet->getMsg_dtwin_pub().dup();
-    send(msg_dtwin_pub, "outUl");
+    send(msg_dtwin_pub, "outUlDtwin");
+}
+
+void BackendMessaging::handleConvoyOrchFromUl(omnetpp::cMessage *msg)
+{
+    delete msg;
+}
+
+void BackendMessaging::handleConvoyOrchFromLl(omnetpp::cMessage *msg)
+{
+    delete msg;
 }
 } // namespace convoy_architecture
