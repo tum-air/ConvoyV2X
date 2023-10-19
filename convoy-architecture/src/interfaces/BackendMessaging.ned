@@ -25,6 +25,10 @@ simple BackendMessaging
         @class("convoy_architecture::BackendMessaging");
         string destinationModuleDtwin = default("backend_top");
         int destinationPortDtwin = default(31000);
+        int destinationPortConvoyOrch = default(41000);
+        int sizeConvoyOrchMsg @unit(B)= default(20B);
+        int convoyDirection = default(0);
+        int nStations = default(15);
     gates:
         input inUlDtwin;
         input inLlDtwin;
@@ -34,4 +38,5 @@ simple BackendMessaging
         input inLlConvoyOrch;
         output outUlConvoyOrch;
         output outLlConvoyOrch;
+        output outMcsAgent;
 }

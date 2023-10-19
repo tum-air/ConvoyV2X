@@ -35,11 +35,17 @@ module BackendDtwinInterface extends TransportLayerNodeBase
         *.interfaceTableModule = default(absPath(".interfaceTable"));
     gates:
         input inAppDtwin;
+        output outAppConvoyOrch;
     submodules:
         ioAppDtwin: UdpSocketIo {
             @display("p=375,80;is=s");
             localPort = 31000;
             destPort = 31000;
+        }
+        ioAppConvoyOrch: UdpSocketIo {
+            @display("p=575,80;is=s");
+            localPort = 41000;
+            destPort = 41000;
         }
         dispatcher_al: MessageDispatcher {
             parameters:
@@ -51,5 +57,8 @@ module BackendDtwinInterface extends TransportLayerNodeBase
         dispatcher_al.in++ <-- udp.appOut;
         ioAppDtwin.socketOut --> dispatcher_al.in++;
         ioAppDtwin.socketIn <-- dispatcher_al.out++;
+        ioAppConvoyOrch.socketOut --> dispatcher_al.in++;
+        ioAppConvoyOrch.socketIn <-- dispatcher_al.out++;
         inAppDtwin --> ioAppDtwin.trafficIn;
+        outAppConvoyOrch <-- ioAppConvoyOrch.trafficOut;
 }

@@ -149,6 +149,7 @@ std::vector<ConvoyControlService*> ConvoyOrchestration::executeOrchestrationStep
     {
         ConvoyControlService *cc_op = new ConvoyControlService();
         cc_op->setNode_id(_orch_ip_node_id.at(node_index).c_str());
+        cc_op->setTimestamp((uint64_t) omnetpp::simTime().raw());
         orchestration_op.push_back(cc_op);
     }
 

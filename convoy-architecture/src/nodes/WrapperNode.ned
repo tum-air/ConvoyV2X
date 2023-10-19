@@ -56,7 +56,8 @@ module WrapperNode
         input inAppDtwinSub;
         output outAppCoopMan;
         input inAppCoopMan;
-        output outAppDtwinPubBknd;    
+        output outAppDtwinPubBknd;
+        input inAppConvoyOrchBknd;    
     submodules:
         mobility: <mobilityType> like IMobility {
             @display("p=400,250;is=s");
@@ -120,4 +121,6 @@ module WrapperNode
 		
 		appDtwinPub.out_bknd --> bmsAgent.inUlDtwin if hasDtwinPub;
 		bmsAgent.outLlDtwin --> outAppDtwinPubBknd if hasDtwinPub;
+		bmsAgent.outMcsAgent --> mcsAgent.inBmsAgent if hasDtwinPub;
+		inAppConvoyOrchBknd --> bmsAgent.inLlConvoyOrch if hasDtwinPub;
 }

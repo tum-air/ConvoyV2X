@@ -39,6 +39,7 @@ module Backend extends TransportLayerNodeBase
     submodules:
         bmsAgent: BackendMessaging {
             @display("p=375,20;is=s");
+            convoyDirection = parent.convoyDirection;
         }
         dtwinStore: DtwinStore {
             @display("p=250,20");

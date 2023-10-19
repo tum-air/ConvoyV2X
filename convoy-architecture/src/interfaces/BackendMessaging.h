@@ -32,6 +32,9 @@ class BackendMessaging : public omnetpp::cSimpleModule
     void handleDtwinFromLl(omnetpp::cMessage *msg);
     void handleConvoyOrchFromUl(omnetpp::cMessage *msg);
     void handleConvoyOrchFromLl(omnetpp::cMessage *msg);
+
+  private:
+    std::map<std::string, std::string> _dtwin_station_hop;
 };
 
 } // namespace convoy_architecture

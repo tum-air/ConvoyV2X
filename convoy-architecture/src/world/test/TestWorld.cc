@@ -192,5 +192,6 @@ void TestWorld::setupStationBackendInterface(int station_id, ConvoyDirection dir
 
     // Connect sensor station to backend interface
     _sensor_station.back()->gate("outAppDtwinPubBknd")->connectTo(bk_if_module->gate("inAppDtwin"));
+    bk_if_module->gate("inAppDtwin")->connectTo(_sensor_station.back()->gate("inAppConvoyOrchBknd"));
 }
 } // namespace convoy_architecture
