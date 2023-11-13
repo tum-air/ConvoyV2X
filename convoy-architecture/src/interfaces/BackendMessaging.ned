@@ -29,6 +29,7 @@ simple BackendMessaging
         int sizeConvoyOrchMsg @unit(B)= default(20B);
         int convoyDirection = default(0);
         int nStations = default(15);
+        double startTime @unit(s) = default(70.000s);
     gates:
         input inUlDtwin;
         input inLlDtwin;

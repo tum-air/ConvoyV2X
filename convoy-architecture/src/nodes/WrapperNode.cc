@@ -75,7 +75,7 @@ void WrapperNode::setupCCSAgent()
 
     // Set position
     omnetpp::cDisplayString display_string = _ccs_agent->getDisplayString();
-    display_string.setTagArg("p", 0, 175);
+    display_string.setTagArg("p", 0, 325);
     display_string.setTagArg("p", 1, 250);
     display_string.setTagArg("is", 0, "s");
     _ccs_agent->setDisplayString(display_string.str());

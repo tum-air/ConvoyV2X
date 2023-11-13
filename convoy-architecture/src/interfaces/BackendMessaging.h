@@ -17,6 +17,7 @@
 #define __CONVOY_ARCHITECTURE_BACKENDMESSAGING_H_
 
 #include <omnetpp.h>
+#include "inet/networklayer/common/L3Address_m.h"
 
 namespace convoy_architecture {
 
@@ -34,7 +35,8 @@ class BackendMessaging : public omnetpp::cSimpleModule
     void handleConvoyOrchFromLl(omnetpp::cMessage *msg);
 
   private:
-    std::map<std::string, std::string> _dtwin_station_hop;
+    std::map<std::string, inet::L3Address> _dtwin_station_hop;
+    omnetpp::cMessage* _start_event;
 };
 
 } // namespace convoy_architecture

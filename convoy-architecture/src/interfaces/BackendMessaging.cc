@@ -28,13 +28,8 @@ Define_Module(BackendMessaging);
 
 void BackendMessaging::initialize()
 {
-    // append sensor station device information
-    int n_stations = par("nStations").intValue();
-    for(int index=0; index<n_stations; index++)
-    {
-        std::string station_id = std::string("d") + std::to_string(par("convoyDirection").intValue()) + std::string("rsu[") + std::to_string(index) + std::string("]");
-        _dtwin_station_hop.insert(std::pair<std::string, std::string>(station_id, station_id));
-    }
+    _start_event = new omnetpp::cMessage("startEvent");
+    scheduleAt(par("startTime").doubleValue(), _start_event);
 }
 
 void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
@@ -65,6 +60,23 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
             EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received convoy orchestration message from lower layer" << std::endl;
             handleConvoyOrchFromLl(msg);
             delete msg;
+        }
+    }
+    else if(msg == _start_event)
+    {
+        EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Starting BMS, registering hop addresses for sensor stations" << std::endl;
+
+        // append sensor station device information
+        int n_stations = par("nStations").intValue();
+        std::string direction_str = (par("convoyDirection").intValue() == ConvoyDirection::TOP)? std::string("top") : std::string("bot");
+        std::string direction_int = std::to_string(par("convoyDirection").intValue());
+        for(int index=0; index<n_stations; index++)
+        {
+            std::string station_id = std::string("d") + direction_int + std::string("rsu[") + std::to_string(index) + std::string("]");
+            std::string hop_module = std::string("bk_if_") + direction_str + std::string("[") + std::to_string(index) + std::string("]");
+            inet::L3Address hop_address = inet::L3AddressResolver().resolve(hop_module.c_str());
+            _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(station_id, hop_address));
+            EV_INFO << station_id << ": " << hop_address.str() << std::endl;
         }
     }
 }
@@ -106,11 +118,13 @@ void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
     ObjectList *msg_dtwin_pub = mcs_packet->getMsg_dtwin_pub().dup();
     int n_objects = msg_dtwin_pub->getN_objects();
     std::string station_id = std::string(msg_dtwin_pub->getStation_id());
+    auto addressTag = packet->getTag<inet::L3AddressReq>();
+    inet::L3Address hop_address = addressTag->getSrcAddress();
     for (int obj_index=0;obj_index<n_objects;obj_index++)
     {
         std::string dtwin_id = std::string(msg_dtwin_pub->getObject_id(obj_index));
-        _dtwin_station_hop.insert(std::pair<std::string, std::string>(dtwin_id, station_id));
-        EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromLl(): dtwin-station-hop " << dtwin_id << "-" << station_id << std::endl;
+        _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(dtwin_id, hop_address));
+        EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromLl(): dtwin-station-hop " << dtwin_id << ": " << hop_address.str() << std::endl;
     }
 
     send(msg_dtwin_pub, "outUlDtwin");
@@ -121,6 +135,7 @@ void BackendMessaging::handleConvoyOrchFromUl(omnetpp::cMessage *msg)
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
     ConvoyControlService *convoy_orch_msg = check_and_cast<ConvoyControlService *>(msg);
+
     auto mcs_packet = inet::makeShared<MCSPacket>();
 
     mcs_packet->setTimestamp(convoy_orch_msg->getTimestamp());
@@ -134,14 +149,13 @@ void BackendMessaging::handleConvoyOrchFromUl(omnetpp::cMessage *msg)
 
     // Set packet destination for next hop address
     std::string destination_node = std::string(convoy_orch_msg->getNode_id());
-    std::string next_hop = _dtwin_station_hop[destination_node];
-    inet::L3Address destination_address = inet::L3AddressResolver().resolve(next_hop.c_str());
+    inet::L3Address destination_address = _dtwin_station_hop[destination_node];
     auto addressReq = packet->addTagIfAbsent<inet::L3AddressReq>();
     addressReq->setDestAddress(destination_address);
     auto portReq = packet->addTagIfAbsent<inet::L4PortReq>();
     portReq->setDestPort(par("destinationPortConvoyOrch").intValue());
 
-    EV_INFO << current_time <<" - BackendMessaging::handleConvoyOrchFromUl(): sending mcs packet bound for " << destination_node << " through sensor station " << next_hop << std::endl;
+    EV_INFO << current_time <<" - BackendMessaging::handleConvoyOrchFromUl(): sending mcs packet bound for " << destination_node << " through sensor station " << destination_address.str() << std::endl;
     send(packet, "outLlConvoyOrch");
 }
 
