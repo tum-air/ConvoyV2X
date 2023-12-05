@@ -45,7 +45,7 @@ void Tracker::handleMessage(omnetpp::cMessage *msg)
     if (!msg->isSelfMessage())
     {
         EV_INFO << current_time <<" - Tracker::handleMessage(): " << "Updating tracker estimates" << std::endl;
-        ObjectList *detected_objects = check_and_cast<ObjectList *>(msg);
+        ObjectList *detected_objects = omnetpp::check_and_cast<ObjectList *>(msg);
         this->updateTrackedObjects(detected_objects);
         EV_INFO << current_time <<" - Tracker::handleMessage(): " << "Publishing tracker estimates" << std::endl;
         this->publishTrackedObjects();

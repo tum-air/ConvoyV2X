@@ -43,7 +43,7 @@ void DtwinPublisher::initialize()
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
-    _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+    _dtwin_store = omnetpp::check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
 
     if(_stop_time > _start_time)
     {

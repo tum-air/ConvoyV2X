@@ -80,7 +80,7 @@ void DtwinSubscriber::handleMessage(omnetpp::cMessage *msg)
     else
     {
         EV_INFO << current_time <<" - DtwinSubscriber::handleMessage(): " << "Receiving dtwin message" << std::endl;
-        ObjectList *dtwin_message = check_and_cast<ObjectList *>(msg);
+        ObjectList *dtwin_message = omnetpp::check_and_cast<ObjectList *>(msg);
         this->receiveDtwinMessage(dtwin_message);
     }
 

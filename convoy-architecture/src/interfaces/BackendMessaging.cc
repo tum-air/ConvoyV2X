@@ -85,7 +85,7 @@ void BackendMessaging::handleDtwinFromUl(omnetpp::cMessage *msg)
 {
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
-    ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(msg);
+    ObjectList *dtwin_pub_msg = omnetpp::check_and_cast<ObjectList *>(msg);
     auto mcs_packet = inet::makeShared<MCSPacket>();
     mcs_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
     mcs_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
@@ -111,7 +111,7 @@ void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
 {
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
-    inet::Packet *packet = check_and_cast<inet::Packet *>(msg);
+    inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
     auto mcs_packet = packet->popAtFront<MCSPacket>();
 
     // Update station hop information for each dtwin  and forward dtwin message to application layer
@@ -134,7 +134,7 @@ void BackendMessaging::handleConvoyOrchFromUl(omnetpp::cMessage *msg)
 {
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
-    ConvoyControlService *convoy_orch_msg = check_and_cast<ConvoyControlService *>(msg);
+    ConvoyControlService *convoy_orch_msg = omnetpp::check_and_cast<ConvoyControlService *>(msg);
 
     auto mcs_packet = inet::makeShared<MCSPacket>();
 

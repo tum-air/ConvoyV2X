@@ -1880,6 +1880,7 @@ endif
 
 # disabling all implicit rules
 .SUFFIXES :
+.PRECIOUS : %_m.h %_m.cc
 
 $O/%.o: %.cc $(COPTS_FILE) | msgheaders smheaders
 	@$(MKPATH) $(dir $@)
