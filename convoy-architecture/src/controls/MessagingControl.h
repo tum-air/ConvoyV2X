@@ -47,6 +47,7 @@ protected:
     void handleDtwinSubscriptionMsgFromLl(omnetpp::cMessage *msg);
     void handleDtwinPublicationMsgFromLl(omnetpp::cMessage *msg);
     void handleCoopManMsgFromLl(omnetpp::cMessage *msg);
+    void handleCCSMsg(omnetpp::cMessage *msg);
     bool fovMatch(double ego_x, std::string roi_tag, double rsu_x, double rsu_fov);
     void routeMessageFromLlToDestination(omnetpp::cMessage *msg, ApplicationType app_type);
     void routeMessageFromUlToDestination(omnetpp::cMessage *msg, int destination_id, ApplicationType app_type);

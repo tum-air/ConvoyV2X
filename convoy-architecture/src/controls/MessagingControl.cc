@@ -111,7 +111,11 @@ void MessagingControl::handleMessage(omnetpp::cMessage *msg)
                 delete msg;
             }
         }
-
+        else if(msg->arrivedOn("inBmsAgent"))
+        {
+            EV_INFO << current_time <<" - MessagingControl::handleMessage(): " << "Received convoy control service message" << std::endl;
+            handleCCSMsg(msg);
+        }
     }
     else if (msg == _subscriber_expiry_check_event)
     {
@@ -504,5 +508,10 @@ void MessagingControl::handleCoopManMsgFromUl(omnetpp::cMessage *msg)
         routeMessageFromUlToDestination(msg, coop_man_msg->getPartner_address(), MessagingControl::ApplicationType::COOP_MANEUVER);
     else
         EV_INFO << current_time <<" - MessagingControl::handleCoopManMsgFromUl(): Convoy control agent not done scanning for cluster broadcast messages, ignoring dtwin message" << std::endl;
+}
+
+void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
+{
+    delete msg;
 }
 } // namespace convoy_architecture
