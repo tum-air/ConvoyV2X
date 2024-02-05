@@ -25,6 +25,7 @@
 #include "messages/ObjectList_m.h"
 #include "stores/DtwinStore.h"
 #include "messages/CoopManeuver_m.h"
+#include "messages/ConvoyControlService_m.h"
 
 namespace convoy_architecture {
 
@@ -512,6 +513,30 @@ void MessagingControl::handleCoopManMsgFromUl(omnetpp::cMessage *msg)
 
 void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
 {
+    // Extract ccs messaage
+    inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
+    auto mcs_packet = packet->popAtFront<MCSPacket>();
+    ConvoyControlService *convoy_orch_msg = mcs_packet->getMsg_ccs().dup();
+
+    // Check if the current node is the final destination
+    std::string destination_node_id = convoy_orch_msg->getNode_id();
+    std::string this_node_id = getParentModule()->getFullName();
+    if(destination_node_id == this_node_id)
+    {
+        // If yes, trigger the appropriate message handler in the ccsAgent - ensure that the ccs agent is ready beforehand
+        ConvoyControl *ccs_agent_module = check_and_cast<ConvoyControl *>(getParentModule()->getSubmodule("ccsAgent"));
+
+        // Proceed further only if ccs agent initialization with broadcast scanning is done
+        if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
+        {
+            // TODO: trigger appropriate ccsAgent function to enforce orchestration rule
+        }
+    }
+    else
+    {
+        // If the current node is not the final destination, forward message similar to dtwin publication
+    }
+
     delete msg;
 }
 } // namespace convoy_architecture
