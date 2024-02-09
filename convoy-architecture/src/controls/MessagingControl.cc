@@ -115,7 +115,7 @@ void MessagingControl::handleMessage(omnetpp::cMessage *msg)
         else if(msg->arrivedOn("inBmsAgent"))
         {
             EV_INFO << current_time <<" - MessagingControl::handleMessage(): " << "Received convoy control service message" << std::endl;
-            handleCCSMsg(msg);
+            handleCCSMsgFromBMS(msg);
         }
     }
     else if (msg == _subscriber_expiry_check_event)
@@ -266,6 +266,13 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
             CoopManeuver *msg_coop_man = mcs_packet->getMsg_coop_man().dup();
             send(msg_coop_man, "outUlAppCoopMan");
         }
+        else if(app_type == MessagingControl::ApplicationType::CONVOY_CONTROL)
+        {
+            // Forward ccs message to ccs agent layer
+            ConvoyControlService *convoy_orch_msg = mcs_packet->getMsg_ccs().dup();
+            if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
+                send(convoy_orch_msg, "outUlAppConvCtl");
+        }
     }
     else if(ccs_agent_module->getClusterRole() == ConvoyControl::Role::MEMBER)
         EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): destination id does not match this member node, dropping message" << std::endl;
@@ -306,6 +313,13 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
 
                 EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): sending coop. man. message to " << destination_module_name << std::endl;
                 send(modified_packet, "outLlAppCoopMan");
+            }
+            else if(app_type == MessagingControl::ApplicationType::CONVOY_CONTROL)
+            {
+                std::string destination_module_name = setDestinationAddress(modified_packet, msg_dst_mac_id, par("destPortAppConvCtl").intValue());
+
+                EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): sending ccs message to " << destination_module_name << std::endl;
+                send(modified_packet, "outLlAppConvCtl");
             }
         }
         else
@@ -521,11 +535,11 @@ void MessagingControl::handleCoopManMsgFromUl(omnetpp::cMessage *msg)
         EV_INFO << current_time <<" - MessagingControl::handleCoopManMsgFromUl(): Convoy control agent not done scanning for cluster broadcast messages, ignoring dtwin message" << std::endl;
 }
 
-void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
+void MessagingControl::handleCCSMsgFromBMS(omnetpp::cMessage *msg)
 {
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
-    // Extract ccs messaage
+    // Extract ccs message
     inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
     auto mcs_packet = packet->popAtFront<MCSPacket>();
     ConvoyControlService *convoy_orch_msg = mcs_packet->getMsg_ccs().dup();
@@ -538,11 +552,9 @@ void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
 
     if(destination_node_id == this_node_id)
     {
-        // If yes, trigger the appropriate message handler in the ccsAgent - ensure that the ccs agent is ready beforehand
+        // If yes, send the message to the ccsAgent - ensure that the ccs agent is ready beforehand
         if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
-        {
-            // TODO: trigger appropriate ccsAgent function to enforce orchestration rule
-        }
+            send(convoy_orch_msg, "outUlAppConvCtl");
     }
     else
     {
@@ -555,12 +567,17 @@ void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
             if(it_element != _subscriber_address.end())
                 routeMessageFromUlToDestination(msg, _subscriber_address[destination_node_id], MessagingControl::ApplicationType::CONVOY_CONTROL);
             else
-                EV_INFO << current_time <<" - MessagingControl::handleCCSMsg(): subscriber " << destination_node_id << " unknown, ignoring ccs message" << std::endl;
+                EV_INFO << current_time <<" - MessagingControl::handleCCSMsgFromBMS(): subscriber " << destination_node_id << " unknown, ignoring ccs message" << std::endl;
         }
         else
-            EV_INFO << current_time <<" - MessagingControl::handleCCSMsg(): Convoy control agent not done scanning for cluster broadcast messages, ignoring ccs message" << std::endl;
+            EV_INFO << current_time <<" - MessagingControl::handleCCSMsgFromBMS(): Convoy control agent not done scanning for cluster broadcast messages, ignoring ccs message" << std::endl;
     }
 
     delete msg;
+}
+
+void MessagingControl::handleConvCtlMsgFromLl(omnetpp::cMessage *msg)
+{
+    routeMessageFromLlToDestination(msg, MessagingControl::ApplicationType::CONVOY_CONTROL);
 }
 } // namespace convoy_architecture
