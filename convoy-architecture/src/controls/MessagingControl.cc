@@ -365,6 +365,16 @@ void MessagingControl::routeMessageFromUlToDestination(omnetpp::cMessage *msg, i
         mcs_packet->setChunkLength(inet::B(par("sizeCoopManMsg").intValue()));
         mcs_packet->setMsg_coop_man(*coop_man_msg);
     }
+    else if(app_type == MessagingControl::ApplicationType::CONVOY_CONTROL)
+    {
+        packet_name = "ConvoyControl";
+        dest_port = "destPortAppConvCtl";
+        out_gate = "outLlAppConvCtl";
+        ConvoyControlService *convoy_orch_msg = check_and_cast<ConvoyControlService *>(msg);
+        mcs_packet->setTimestamp(convoy_orch_msg->getTimestamp());
+        mcs_packet->setChunkLength(inet::B(par("sizeConvCtlMsg").intValue()));
+        mcs_packet->setMsg_ccs(*convoy_orch_msg);
+    }
     else
         return;
 
@@ -513,6 +523,8 @@ void MessagingControl::handleCoopManMsgFromUl(omnetpp::cMessage *msg)
 
 void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
 {
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+
     // Extract ccs messaage
     inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
     auto mcs_packet = packet->popAtFront<MCSPacket>();
@@ -521,12 +533,12 @@ void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
     // Check if the current node is the final destination
     std::string destination_node_id = convoy_orch_msg->getNode_id();
     std::string this_node_id = getParentModule()->getFullName();
+
+    ConvoyControl *ccs_agent_module = check_and_cast<ConvoyControl *>(getParentModule()->getSubmodule("ccsAgent"));
+
     if(destination_node_id == this_node_id)
     {
         // If yes, trigger the appropriate message handler in the ccsAgent - ensure that the ccs agent is ready beforehand
-        ConvoyControl *ccs_agent_module = check_and_cast<ConvoyControl *>(getParentModule()->getSubmodule("ccsAgent"));
-
-        // Proceed further only if ccs agent initialization with broadcast scanning is done
         if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
         {
             // TODO: trigger appropriate ccsAgent function to enforce orchestration rule
@@ -535,6 +547,18 @@ void MessagingControl::handleCCSMsg(omnetpp::cMessage *msg)
     else
     {
         // If the current node is not the final destination, forward message similar to dtwin publication
+        // Proceed further only if ccs agent initialization with broadcast scanning is done
+        if(ccs_agent_module->getAgentStatus() != ConvoyControl::AgentStatus::STATUS_INIT_SCANNING)
+        {
+            // Forward ccs message to subscriber if present
+            auto it_element = _subscriber_address.find(destination_node_id);
+            if(it_element != _subscriber_address.end())
+                routeMessageFromUlToDestination(msg, _subscriber_address[destination_node_id], MessagingControl::ApplicationType::CONVOY_CONTROL);
+            else
+                EV_INFO << current_time <<" - MessagingControl::handleCCSMsg(): subscriber " << destination_node_id << " unknown, ignoring ccs message" << std::endl;
+        }
+        else
+            EV_INFO << current_time <<" - MessagingControl::handleCCSMsg(): Convoy control agent not done scanning for cluster broadcast messages, ignoring ccs message" << std::endl;
     }
 
     delete msg;

@@ -56,6 +56,8 @@ module WrapperNode
         input inAppDtwinSub;
         output outAppCoopMan;
         input inAppCoopMan;
+        output outAppConvCtl;
+        input inAppConvCtl;
         output outAppDtwinPubBknd;
         input inAppConvoyOrchBknd;    
     submodules:
@@ -103,9 +105,11 @@ module WrapperNode
         mcsAgent.outLlAppDtwinPub --> outAppDtwinPub;
         mcsAgent.outLlAppDtwinSub --> outAppDtwinSub;
         mcsAgent.outLlAppCoopMan --> outAppCoopMan;
+        mcsAgent.outLlAppConvCtl --> outAppConvCtl;
         inAppDtwinPub --> mcsAgent.inLlAppDtwinPub;
         inAppDtwinSub --> mcsAgent.inLlAppDtwinSub;
         inAppCoopMan --> mcsAgent.inLlAppCoopMan;
+        inAppConvCtl --> mcsAgent.inLlAppConvCtl;
         
         mcsAgent.outUlAppDtwinSub --> appDtwinSub.in if hasDtwinSub;
         mcsAgent.outUlAppCoopMan --> appCoopMan.in if hasCoopMan;

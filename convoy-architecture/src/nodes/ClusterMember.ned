@@ -53,6 +53,8 @@ module ClusterMember
         output toAppDtwinSub;
         input fromAppCoopMan;
         output toAppCoopMan;
+        input fromAppConvCtl;
+        output toAppConvCtl;
     submodules:
         interfaceTable: InterfaceTable {
             @display("p=100,525;is=s");
@@ -90,19 +92,24 @@ module ClusterMember
                 @display("p=350,150;b=200,5,,,,1");
         }
         ioAppDtwinSub: UdpSocketIo {
-            @display("p=150,75;is=s");
+            @display("p=140,75;is=s");
             localPort = 21001;
             destPort = 21002;
         }
         ioAppDtwinPub: UdpSocketIo {
-            @display("p=350,75;is=s");
+            @display("p=280,75;is=s");
             localPort = 21002;
             destPort = 21001;
         }
         ioAppCoopMan: UdpSocketIo {
-            @display("p=550,75;is=s");
+            @display("p=420,75;is=s");
             localPort = 21003;
             destPort = 21003;
+        }
+        ioAppConvCtl: UdpSocketIo {
+            @display("p=560,75;is=s");
+            localPort = 41000;
+            destPort = 41000;
         }
     connections allowunconnected:
         // physical layer
@@ -126,14 +133,18 @@ module ClusterMember
         ioAppDtwinSub.socketOut --> dispatcher_al.in++;
 		ioAppDtwinPub.socketOut --> dispatcher_al.in++;
 		ioAppCoopMan.socketOut --> dispatcher_al.in++;
+		ioAppConvCtl.socketOut --> dispatcher_al.in++;
 		ioAppDtwinSub.socketIn <-- dispatcher_al.out++;
 		ioAppDtwinPub.socketIn <-- dispatcher_al.out++;
 		ioAppCoopMan.socketIn <-- dispatcher_al.out++;
+		ioAppConvCtl.socketIn <-- dispatcher_al.out++;
 		
 		ioAppDtwinSub.trafficOut --> toAppDtwinSub;
         ioAppDtwinPub.trafficOut --> toAppDtwinPub;
         ioAppCoopMan.trafficOut --> toAppCoopMan;
+        ioAppConvCtl.trafficOut --> toAppConvCtl;
         fromAppDtwinSub --> ioAppDtwinSub.trafficIn;
         fromAppDtwinPub --> ioAppDtwinPub.trafficIn;
         fromAppCoopMan --> ioAppCoopMan.trafficIn;
+        fromAppConvCtl --> ioAppConvCtl.trafficIn;
 }

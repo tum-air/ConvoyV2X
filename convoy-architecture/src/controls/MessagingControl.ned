@@ -28,9 +28,11 @@ simple MessagingControl
         double roiNearby @unit(m) = default(300.0m);
         int sizeDtwinSubMsg @unit(B)= default(10B);
         int sizeCoopManMsg @unit(B)= default(20B);
+        int sizeConvCtlMsg @unit(B)= default(20B);
         int destPortAppDtwinPub = default(21001);
         int destPortAppDtwinSub = default(21002);
         int destPortAppCoopMan = default(21003);
+        int destPortAppConvCtl = default(41000);
         double subscriberExpiryCheckInterval @unit(s) = default(1.0s);
         double subscriberMaxAge @unit(s) = default(5.0s);
 
@@ -41,11 +43,14 @@ simple MessagingControl
         input inLlAppDtwinSub;
         output outLlAppCoopMan;
         input inLlAppCoopMan;
+        output outLlAppConvCtl;
+        input inLlAppConvCtl;
         output outUlAppDtwinPub;
         input inUlAppDtwinPub;
         output outUlAppDtwinSub;
         input inUlAppDtwinSub;
         output outUlAppCoopMan;
         input inUlAppCoopMan;
+        output outUlAppConvCtl;
         input inBmsAgent;
 }

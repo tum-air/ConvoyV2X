@@ -37,7 +37,7 @@ private:
 public:
     MessagingControl();
     ~MessagingControl();
-    enum ApplicationType {DTWIN_SUB, DTWIN_PUB, COOP_MANEUVER};
+    enum ApplicationType {DTWIN_SUB, DTWIN_PUB, COOP_MANEUVER, CONVOY_CONTROL};
 protected:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;

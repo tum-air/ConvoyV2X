@@ -14,6 +14,7 @@
 // 
 
 #include "WrapperNode.h"
+#include "controls/MessagingControl.h"
 
 namespace convoy_architecture {
 
@@ -88,6 +89,10 @@ void WrapperNode::setupCCSAgent()
     _ccs_agent->buildInside();
     _ccs_agent->scheduleStart(omnetpp::simTime());
     _ccs_agent->callInitialize();
+
+    // Connect to mcs agent to receive convoy orchestration messages
+    MessagingControl *mcs_agent_module = check_and_cast<MessagingControl *>(this->getSubmodule("mcsAgent"));
+    mcs_agent_module->gate("outUlAppConvCtl")->connectTo(_ccs_agent->gate("in"));
 }
 
 ConvoyDirection WrapperNode::getInitialNodeDirection()
