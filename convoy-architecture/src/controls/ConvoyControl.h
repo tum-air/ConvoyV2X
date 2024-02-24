@@ -42,6 +42,9 @@ class ConvoyControl : public omnetpp::cSimpleModule, public omnetpp::cListener
     Role getClusterRole();
     unsigned short getManagerId();
     unsigned short getMemberId();
+    unsigned short getGatewayId();
+    double getTxp();
+    double getTxpGw();
 
   private:
     ConvoyDirection _convoy_direction;
@@ -90,6 +93,9 @@ class ConvoyControl : public omnetpp::cSimpleModule, public omnetpp::cListener
     std::map<int, double> _broadcast_rx_publisher_y;
     std::map<int, double> _broadcast_rx_publisher_fov;
     std::map<int, int> _broadcast_rx_publisher_direction;
+
+    double _txp;
+    double _txp_gw;
 
   protected:
     virtual void initialize() override;

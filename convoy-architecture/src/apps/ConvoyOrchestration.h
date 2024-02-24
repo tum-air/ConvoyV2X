@@ -37,6 +37,7 @@ struct Node {
     inet::Coord position;
     double speed;
     double txp;
+    double txp_gw;
 };
 
 struct Cluster {

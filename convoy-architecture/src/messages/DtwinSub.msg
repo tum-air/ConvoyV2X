@@ -22,4 +22,15 @@ message DtwinSub {
     int subscriber_address;
     string roi_tag;
     string qos_tag;
+    
+    string ccs_report_name;
+    int ccs_report_id_gnb;
+    int ccs_report_id_ue;
+    int ccs_report_id_gnb_gw;
+    int ccs_report_id_ue_gw;
+    int ccs_report_type;
+    int ccs_report_role;
+    double ccs_report_speed;
+    double ccs_report_txp;
+    double ccs_report_txp_gw;
 }

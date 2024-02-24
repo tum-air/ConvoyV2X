@@ -774,6 +774,11 @@ unsigned short ConvoyControl::getMemberId()
     return (_member_id);
 }
 
+unsigned short ConvoyControl::getGatewayId()
+{
+    return (_gateway_id);
+}
+
 void ConvoyControl::runModeUpdates()
 {
     scheduleAfter(_agent_run_mode_update_interval, _run_mode_update_trigger);
@@ -907,5 +912,17 @@ void ConvoyControl::attachClusterGateway(unsigned short cluster_id_gw, double cl
 void ConvoyControl::detachClusterGateway()
 {
     _cluster_role = ConvoyControl::Role::MEMBER;
+}
+
+double ConvoyControl::getTxp()
+{
+    // TODO
+    return _txp;
+}
+
+double ConvoyControl::getTxpGw()
+{
+    // TODO
+    return _txp_gw;
 }
 } // namespace convoy_architecture

@@ -14,7 +14,9 @@
 // 
 
 #include "DtwinSubscriber.h"
-#include "messages/DtwinSub_m.h"
+#include "controls/ConvoyControl.h"
+#include "common/binder/Binder.h"
+#include "veins_inet/VeinsInetMobility.h"
 
 namespace convoy_architecture {
 
@@ -120,6 +122,46 @@ void DtwinSubscriber::updateROI(std::string roi_tag)
 void DtwinSubscriber::updateQOS(std::string qos_tag)
 {
     _qos_tag = qos_tag;
+}
+
+void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
+{
+    ConvoyControl *ccs_agent_module = check_and_cast<ConvoyControl *>(getParentModule()->getSubmodule("ccsAgent"));
+    Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+
+    if(ccs_agent_module != nullptr)
+    {
+        if(ccs_agent_module->getAgentStatus() != ConvoyControl::AgentStatus::STATUS_INIT_SCANNING)
+        {
+            msg->setCcs_report_name(_subscriber_id.c_str());
+            switch(ccs_agent_module->getClusterRole())
+            {
+                case ConvoyControl::Role::MANAGER:
+                    msg->setCcs_report_id_ue(ccs_agent_module->getManagerId());
+                    msg->setCcs_report_id_gnb(ccs_agent_module->getManagerId());
+                    break;
+                case ConvoyControl::Role::MEMBER:
+                    msg->setCcs_report_id_ue(ccs_agent_module->getMemberId());
+                    msg->setCcs_report_id_gnb(binder->getNextHop(ccs_agent_module->getMemberId()));
+                    break;
+                case ConvoyControl::Role::GATEWAY:
+                    msg->setCcs_report_id_ue(ccs_agent_module->getMemberId());
+                    msg->setCcs_report_id_gnb(binder->getNextHop(ccs_agent_module->getMemberId()));
+                    msg->setCcs_report_id_ue_gw(ccs_agent_module->getGatewayId());
+                    msg->setCcs_report_id_gnb_gw(binder->getNextHop(ccs_agent_module->getGatewayId()));
+                default:
+                    break;
+
+            }
+
+            veins::VeinsInetMobility* object_mobility_module = check_and_cast<veins::VeinsInetMobility*>(getParentModule()->getSubmodule("mobility"));
+            inet::Coord object_velocity = object_mobility_module->getCurrentVelocity();
+            msg->setCcs_report_speed(object_velocity.length());
+
+            msg->setCcs_report_txp(ccs_agent_module->getTxp());
+            msg->setCcs_report_txp_gw(ccs_agent_module->getTxpGw());
+        }
+    }
 }
 
 } // namespace convoy_architecture

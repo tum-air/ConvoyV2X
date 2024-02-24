@@ -18,6 +18,7 @@
 
 #include <omnetpp.h>
 #include "messages/ObjectList_m.h"
+#include "messages/DtwinSub_m.h"
 
 namespace convoy_architecture {
 
@@ -47,6 +48,7 @@ class DtwinSubscriber : public omnetpp::cSimpleModule
     void updateROI(std::string roi_tag);
     void updateQOS(std::string qos_tag);
     void updateSubscriberID(std::string subscriber_id);
+    void appendCCSReport(DtwinSub *msg);
 };
 
 } // namespace convoy_architecture
