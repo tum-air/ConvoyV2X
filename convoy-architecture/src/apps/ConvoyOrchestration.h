@@ -22,8 +22,36 @@
 #include "veins_inet/VeinsInetMobility.h"
 #include "messages/ConvoyControlService_m.h"
 #include "common/defs.h"
+#include "controls/ConvoyControl.h"
 
 namespace convoy_architecture {
+
+struct Node {
+    std::string name;
+    int id_gnb;
+    int id_ue;
+    int id_gnb_gw;
+    int id_ue_gw;
+    StationType type;
+    ConvoyControl::Role role;
+    inet::Coord position;
+    double speed;
+    double txp;
+};
+
+struct Cluster {
+    std::string name;
+    int id;
+    std::vector<Node> nodes;
+    double length;
+};
+
+struct Convoy {
+    std::string name;
+    int id;
+    std::vector<Cluster> clusters;
+    double length;
+};
 
 /**
  * TODO - Generated class
@@ -31,9 +59,6 @@ namespace convoy_architecture {
 class ConvoyOrchestration : public omnetpp::cSimpleModule
 {
   private:
-    omnetpp::simtime_t _start_time;
-    omnetpp::simtime_t _stop_time;
-    omnetpp::simtime_t _update_rate;
     omnetpp::cMessage* _start_event;
     omnetpp::cMessage* _update_event;
     DtwinStore* _dtwin_store;
@@ -44,9 +69,16 @@ class ConvoyOrchestration : public omnetpp::cSimpleModule
     std::vector<ConvoyControlService*> _orch_op_node_cc;
     ConvoyDirection _convoy_direction;
 
-  protected:
-    virtual void initialize() override;
-    virtual void handleMessage(omnetpp::cMessage *msg) override;
+    /* ----- */
+    std::vector<Convoy> _current_state;
+    std::vector<Convoy> _desired_state;
+    void estimate_actual_state();
+    void compute_desired_state();
+    void enforce_desired_state();
+    /* ----- */
+
+    void initialize() override;
+    void handleMessage(omnetpp::cMessage *msg) override;
     void formatInput();
     void computeOutput();
     void transferOutput();

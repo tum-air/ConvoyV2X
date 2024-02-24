@@ -38,21 +38,18 @@ void ConvoyOrchestration::initialize()
     omnetpp::simtime_t current_time = omnetpp::simTime();
     EV_INFO << current_time <<" - ConvoyOrchestration::initialize(): " << "Initializing convoy orchestration application " << std::endl;
 
-    _start_time = par("startTime").doubleValue();
-    _stop_time = par("stopTime").doubleValue();
-    _update_rate = par("updateRate").doubleValue();
+    double start_time = par("startTime").doubleValue();
     _convoy_direction = static_cast<ConvoyDirection>(par("convoyDirection").intValue());
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
     _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
 
-    if(_stop_time > _start_time)
+    if(par("stopTime").doubleValue() > start_time)
     {
-        omnetpp::simtime_t trigger_time = (current_time < _start_time)? _start_time : current_time;
+        omnetpp::simtime_t trigger_time = (current_time < start_time)? start_time : current_time;
         scheduleAt(trigger_time, _start_event);
         EV_INFO << current_time <<" - ConvoyOrchestration::initialize(): " << "Scheduled convoy orchestration start for time " << trigger_time << "s" << std::endl;
-        EV_INFO << current_time <<" - ConvoyOrchestration::initialize(): " << "Update rate set at " << _update_rate << "s" << std::endl;
     }
 
         EV_INFO << current_time <<" - ConvoyOrchestration::initialize(): " << "Initialized convoy orchestration application" << std::endl;
@@ -88,10 +85,10 @@ void ConvoyOrchestration::handleMessage(omnetpp::cMessage *msg)
             if(_dtwin != nullptr)
                 delete _dtwin;
         }
-        scheduleAfter(_update_rate, _update_event);
+        scheduleAfter(par("updateRate").doubleValue(), _update_event);
     }
 
-    if ((current_time >= _stop_time) && _update_event->isScheduled())
+    if ((current_time >= par("stopTime").doubleValue()) && _update_event->isScheduled())
     {
         EV_INFO << current_time <<" - ConvoyOrchestration::handleMessage(): " << "Stopping convoy orchestration application" << std::endl;
         cancelEvent(_update_event);
@@ -161,5 +158,20 @@ void ConvoyOrchestration::transferOutput()
     for(int node_index=0; node_index<_orch_op_node_cc.size(); node_index++)
         send(_orch_op_node_cc.at(node_index), "out");
 }
+
+
+/* ----- */
+void ConvoyOrchestration::estimate_actual_state() {
+    //
+}
+
+void ConvoyOrchestration::compute_desired_state() {
+    //
+}
+
+void ConvoyOrchestration::enforce_desired_state() {
+    //
+}
+/* ----- */
 
 } // namespace convoy_architecture
