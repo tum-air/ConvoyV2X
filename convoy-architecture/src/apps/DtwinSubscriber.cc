@@ -17,6 +17,7 @@
 #include "controls/ConvoyControl.h"
 #include "common/binder/Binder.h"
 #include "veins_inet/VeinsInetMobility.h"
+#include "nodes/WrapperNode.h"
 
 namespace convoy_architecture {
 
@@ -134,6 +135,9 @@ void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
         if(ccs_agent_module->getAgentStatus() != ConvoyControl::AgentStatus::STATUS_INIT_SCANNING)
         {
             msg->setCcs_report_name(_subscriber_id.c_str());
+            msg->setCcs_report_direction(ccs_agent_module->getConvoyDirection());
+            msg->setCcs_report_convoy_id(ccs_agent_module->getConvoyIdCCS());
+            msg->setCcs_report_cluster_id(ccs_agent_module->getClusterIdCCS());
             switch(ccs_agent_module->getClusterRole())
             {
                 case ConvoyControl::Role::MANAGER:
@@ -154,8 +158,16 @@ void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
 
             }
 
+            WrapperNode* wrapper_node = check_and_cast<WrapperNode*>(getParentModule());
+            msg->setCcs_report_type(wrapper_node->getStationType());
+            msg->setCcs_report_role(ccs_agent_module->getClusterRole());
+
             veins::VeinsInetMobility* object_mobility_module = check_and_cast<veins::VeinsInetMobility*>(getParentModule()->getSubmodule("mobility"));
             inet::Coord object_velocity = object_mobility_module->getCurrentVelocity();
+            inet::Coord object_position = object_mobility_module->getCurrentPosition();
+            msg->setCcs_report_position_x(object_position.x);
+            msg->setCcs_report_position_y(object_position.y);
+            msg->setCcs_report_position_z(object_position.z);
             msg->setCcs_report_speed(object_velocity.length());
 
             msg->setCcs_report_txp(ccs_agent_module->getTxp());

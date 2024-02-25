@@ -925,4 +925,19 @@ double ConvoyControl::getTxpGw()
     // TODO
     return _txp_gw;
 }
+
+ConvoyDirection ConvoyControl::getConvoyDirection()
+{
+    return _convoy_direction;
+}
+
+int ConvoyControl::getConvoyIdCCS()
+{
+    return _convoy_id_ccs;
+}
+
+int ConvoyControl::getClusterIdCCS()
+{
+    return _cluster_id_ccs;
+}
 } // namespace convoy_architecture

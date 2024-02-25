@@ -48,8 +48,10 @@ OBJS = \
     $O/interfaces/MultipleInputSingleOutput.o \
     $O/nodes/WrapperNode.o \
     $O/stores/DtwinStore.o \
+    $O/stores/SubscriberStore.o \
     $O/world/synthetic/SyntheticWorld.o \
     $O/world/test/TestWorld.o \
+    $O/messages/ConvoyControlFeedback_m.o \
     $O/messages/ConvoyControlService_m.o \
     $O/messages/CoopManeuver_m.o \
     $O/messages/DtwinSub_m.o \
@@ -58,6 +60,7 @@ OBJS = \
 
 # Message files
 MSGFILES = \
+    messages/ConvoyControlFeedback.msg \
     messages/ConvoyControlService.msg \
     messages/CoopManeuver.msg \
     messages/DtwinSub.msg \

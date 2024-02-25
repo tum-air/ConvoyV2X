@@ -13,30 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-namespace convoy_architecture;
+package convoy_architecture.stores;
 
-message DtwinSub {
-    uint64_t timestamp;
-    string subscriber_id;
-    string subscriber_type;
-    int subscriber_address;
-    string roi_tag;
-    string qos_tag;
-    
-    string ccs_report_name;
-    int ccs_report_direction;
-    int ccs_report_convoy_id;
-    int ccs_report_cluster_id;
-    int ccs_report_id_gnb;
-    int ccs_report_id_ue;
-    int ccs_report_id_gnb_gw;
-    int ccs_report_id_ue_gw;
-    int ccs_report_type;
-    int ccs_report_role;
-    double ccs_report_position_x;
-    double ccs_report_position_y;
-    double ccs_report_position_z=0;
-    double ccs_report_speed;
-    double ccs_report_txp;
-    double ccs_report_txp_gw;
+//
+// TODO auto-generated module
+//
+simple SubscriberStore
+{
+    parameters:
+        double subscriberMaxAge @unit(s) = default(5.000s);
+        double subscriberCheckInterval @unit(s) = default(1.000s);
+
+        @display("i=block/buffer2;is=s");
+        @class("convoy_architecture::SubscriberStore");
 }
