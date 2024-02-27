@@ -53,4 +53,5 @@ simple MessagingControl
         input inUlAppCoopMan;
         output outUlAppConvCtl;
         input inBmsAgent;
+        output outBmsDtwinSub;
 }

@@ -253,6 +253,10 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
                 dtwin_store->updateObjectTypeAndAddress(subscriber_id, std::string(mcs_packet->getMsg_dtwin_sub().getSubscriber_type()), mcs_packet->getMsg_dtwin_sub().getSubscriber_address());
             }
             EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): subscriber " << subscriber_id << " added to list, list length = " << _subscriber_timestamp.size() << std::endl;
+
+            // Send a copy of the subscription message to the backend for convoy orchestration
+            send(mcs_packet->getMsg_dtwin_sub().dup(), "outBmsDtwinSub");
+            EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): subscriber data forwarded to bms agent" << std::endl;
         }
         else if(app_type == MessagingControl::ApplicationType::DTWIN_PUB)
         {

@@ -126,5 +126,6 @@ module WrapperNode
 		appDtwinPub.out_bknd --> bmsAgent.inUlDtwin if hasDtwinPub;
 		bmsAgent.outLlDtwin --> outAppDtwinPubBknd if hasDtwinPub;
 		bmsAgent.outMcsAgent --> mcsAgent.inBmsAgent if hasDtwinPub;
+		mcsAgent.outBmsDtwinSub --> bmsAgent.inMcsDtwinSub if hasDtwinPub;
 		inAppConvoyOrchBknd --> bmsAgent.inLlConvoyOrch if hasDtwinPub;
 }

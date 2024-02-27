@@ -21,6 +21,7 @@
 #include "inet/transportlayer/common/L4PortTag_m.h"
 #include "messages/ConvoyControlService_m.h"
 #include "common/defs.h"
+#include "messages/DtwinSub_m.h"
 
 namespace convoy_architecture {
 
@@ -59,6 +60,12 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
         {
             EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received convoy orchestration message from lower layer" << std::endl;
             handleConvoyOrchFromLl(msg);
+            delete msg;
+        }
+        if(msg->arrivedOn("inMcsDtwinSub"))
+        {
+            EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin subscription message from mcs agent" << std::endl;
+            handleDtwinSubFromMcs(msg);
             delete msg;
         }
     }
@@ -165,5 +172,31 @@ void BackendMessaging::handleConvoyOrchFromLl(omnetpp::cMessage *msg)
     omnetpp::simtime_t current_time = omnetpp::simTime();
     EV_INFO << current_time <<" - BackendMessaging::handleConvoyOrchFromLl(): forwarding convoy orchestration message to local mcs agent" << std::endl;
     send(msg->dup(), "outMcsAgent");
+}
+
+void BackendMessaging::handleDtwinSubFromMcs(omnetpp::cMessage *msg)
+{
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+
+    DtwinSub *dtwin_sub_msg = omnetpp::check_and_cast<DtwinSub *>(msg);
+    auto mcs_packet = inet::makeShared<MCSPacket>();
+    mcs_packet->setTimestamp(dtwin_sub_msg->getTimestamp());
+    mcs_packet->setChunkLength(inet::B(par("sizeDtwinSubMsg").intValue()));
+    mcs_packet->setMsg_dtwin_sub(*dtwin_sub_msg);
+
+    inet::Packet *packet = new inet::Packet("DtwinSubscription");
+
+    // Insert message into transfer packet
+    packet->insertAtBack(mcs_packet);
+
+    // Set packet destination for next hop address
+    inet::L3Address destination_address = inet::L3AddressResolver().resolve(par("destinationModuleDtwin"));
+    auto addressReq = packet->addTagIfAbsent<inet::L3AddressReq>();
+    addressReq->setDestAddress(destination_address);
+    auto portReq = packet->addTagIfAbsent<inet::L4PortReq>();
+    portReq->setDestPort(par("destinationPortDtwinSub").intValue());
+
+    EV_INFO << current_time <<" - BackendMessaging::handleDtwinSubFromMcs(): sending mcs packet to backend interface device" << std::endl;
+    send(packet, "outLlDtwin");
 }
 } // namespace convoy_architecture

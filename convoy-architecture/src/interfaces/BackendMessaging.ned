@@ -26,10 +26,12 @@ simple BackendMessaging
         string destinationModuleDtwin = default("backend_top");
         int destinationPortDtwin = default(31000);
         int destinationPortConvoyOrch = default(41000);
+        int destinationPortDtwinSub = default(51000);
         int sizeConvoyOrchMsg @unit(B)= default(20B);
         int convoyDirection = default(0);
         int nStations = default(15);
         double startTime @unit(s) = default(70.000s);
+        int sizeDtwinSubMsg @unit(B)= default(10B);
     gates:
         input inUlDtwin;
         input inLlDtwin;
@@ -37,6 +39,7 @@ simple BackendMessaging
         output outLlDtwin;
         input inUlConvoyOrch;
         input inLlConvoyOrch;
+        input inMcsDtwinSub;
         output outUlConvoyOrch;
         output outLlConvoyOrch;
         output outMcsAgent;
