@@ -26,4 +26,6 @@ simple SubscriberStore
 
         @display("i=block/buffer2;is=s");
         @class("convoy_architecture::SubscriberStore");
+    gates:
+        input in;
 }

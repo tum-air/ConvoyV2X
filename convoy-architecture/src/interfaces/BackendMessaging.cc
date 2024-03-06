@@ -68,6 +68,12 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
             handleDtwinSubFromMcs(msg);
             delete msg;
         }
+        else if(msg->arrivedOn("inLlDtwinSub"))
+        {
+            EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received subscriber message from lower layer" << std::endl;
+            handleDtwinSubFromLl(msg);
+            delete msg;
+        }
     }
     else if(msg == _start_event)
     {
@@ -198,5 +204,31 @@ void BackendMessaging::handleDtwinSubFromMcs(omnetpp::cMessage *msg)
 
     EV_INFO << current_time <<" - BackendMessaging::handleDtwinSubFromMcs(): sending mcs packet to backend interface device" << std::endl;
     send(packet, "outLlDtwin");
+}
+
+void BackendMessaging::handleDtwinSubFromLl(omnetpp::cMessage *msg)
+{
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+
+    inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
+    auto mcs_packet = packet->popAtFront<MCSPacket>();
+
+    // Update station hop information for each dtwin  and forward dtwin message to application layer
+    DtwinSub *msg_dtwin_sub = mcs_packet->getMsg_dtwin_sub().dup();
+
+    /*
+    int n_objects = msg_dtwin_sub->getN_objects();
+    std::string station_id = std::string(msg_dtwin_sub->getStation_id());
+    auto addressTag = packet->getTag<inet::L3AddressReq>();
+    inet::L3Address hop_address = addressTag->getSrcAddress();
+    for (int obj_index=0;obj_index<n_objects;obj_index++)
+    {
+        std::string dtwin_id = std::string(msg_dtwin_pub->getObject_id(obj_index));
+        _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(dtwin_id, hop_address));
+        EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromLl(): dtwin-station-hop " << dtwin_id << ": " << hop_address.str() << std::endl;
+    }
+
+    send(msg_dtwin_pub, "outUlDtwin");
+    */
 }
 } // namespace convoy_architecture

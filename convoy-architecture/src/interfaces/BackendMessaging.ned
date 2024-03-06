@@ -39,8 +39,12 @@ simple BackendMessaging
         output outLlDtwin;
         input inUlConvoyOrch;
         input inLlConvoyOrch;
-        input inMcsDtwinSub;
         output outUlConvoyOrch;
         output outLlConvoyOrch;
+        input inMcsDtwinSub;
         output outMcsAgent;
+        input inUlDtwinSub;
+        input inLlDtwinSub;
+        output outUlDtwinSub;
+        output outLlDtwinSub;
 }

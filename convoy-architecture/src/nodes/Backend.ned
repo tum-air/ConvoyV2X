@@ -21,6 +21,7 @@ import inet.node.base.TransportLayerNodeBase;
 import inet.applications.udpapp.UdpSocketIo;
 import inet.common.MessageDispatcher;
 import convoy_architecture.apps.ConvoyOrchestration;
+import convoy_architecture.stores.SubscriberStore;
 
 module Backend extends TransportLayerNodeBase
 {
@@ -38,29 +39,37 @@ module Backend extends TransportLayerNodeBase
         string detectorStationType = default("rsu");
     submodules:
         bmsAgent: BackendMessaging {
-            @display("p=375,20;is=s");
+            @display("p=375,80;is=s");
             convoyDirection = parent.convoyDirection;
         }
         dtwinStore: DtwinStore {
-            @display("p=250,20");
+            @display("p=375,20");
         }
         ioAppDtwin: UdpSocketIo {
-            @display("p=250,80;is=s");
+            @display("p=375,130;is=s");
             localPort = 31000;
             destPort = 31000;
         }
         dispatcher_al: MessageDispatcher {
             parameters:
-                @display("p=375,160;b=200,5,,,,1");
+                @display("p=375,170;b=200,5,,,,1");
         }
         ioAppConvoyOrch: UdpSocketIo {
-            @display("p=500,80;is=s");
+            @display("p=500,130;is=s");
             localPort = 41000;
             destPort = 41000;
         }
         appConvoyOrch: ConvoyOrchestration {
             @display("p=500,20;is=s");
             convoyDirection = parent.convoyDirection;
+        }
+        ioAppDtwinSub: UdpSocketIo {
+            @display("p=250,130;is=s");
+            localPort = 21001;
+            destPort = 21002;
+        }
+        subscriberStore: SubscriberStore {
+            @display("p=250,20");
         }
     connections allowunconnected:
         // application layer
@@ -77,4 +86,10 @@ module Backend extends TransportLayerNodeBase
         bmsAgent.outLlConvoyOrch --> ioAppConvoyOrch.trafficIn;
         bmsAgent.outUlConvoyOrch --> appConvoyOrch.in;
         ioAppConvoyOrch.trafficOut --> bmsAgent.inLlConvoyOrch;
+        
+        ioAppDtwinSub.socketOut --> dispatcher_al.in++;
+        ioAppDtwinSub.socketIn <-- dispatcher_al.out++;
+        bmsAgent.outLlDtwinSub --> ioAppDtwinSub.trafficIn;
+        ioAppDtwinSub.trafficOut --> bmsAgent.inLlDtwinSub;
+        bmsAgent.outUlDtwinSub --> subscriberStore.in;
 }

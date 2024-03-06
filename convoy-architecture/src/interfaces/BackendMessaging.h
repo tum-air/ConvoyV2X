@@ -34,6 +34,7 @@ class BackendMessaging : public omnetpp::cSimpleModule
     void handleConvoyOrchFromUl(omnetpp::cMessage *msg);
     void handleConvoyOrchFromLl(omnetpp::cMessage *msg);
     void handleDtwinSubFromMcs(omnetpp::cMessage *msg);
+    void handleDtwinSubFromLl(omnetpp::cMessage *msg);
 
   private:
     std::map<std::string, inet::L3Address> _dtwin_station_hop;
