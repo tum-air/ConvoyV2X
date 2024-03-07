@@ -31,6 +31,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
     void checkSubscriberExpiry();
+    void appendNodeCCSFeedback(DtwinSub *msg);
 
     omnetpp::cMessage *_subscriber_expiry_check_event{nullptr};
     std::vector<Node> _subscriber_ccs_record;
@@ -40,7 +41,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
         if (_subscriber_expiry_check_event != nullptr)
             cancelAndDelete(_subscriber_expiry_check_event);
     }
-    void appendNodeCCSFeedback(DtwinSub *msg);
+    std::vector<Node> readCCSReports();
 };
 
 } // namespace convoy_architecture

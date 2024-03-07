@@ -56,12 +56,9 @@ void SubscriberStore::handleMessage(omnetpp::cMessage *msg)
 }
 
 void SubscriberStore::appendNodeCCSFeedback(DtwinSub *msg) {
-    // Edit existing entry if the node already exists, else create a new entry
-    std::string node_name = std::string(msg->getCcs_report_name());
-    auto it = std::find_if(std::begin(_subscriber_ccs_record), std::end(_subscriber_ccs_record), [&node_name] (Node const& val) {return val.name == node_name;});
-
+    // Edit existing entry if the node already exists and if the time stamp is more recent, else create a new entry
     Node subscriber_info {
-        node_name,
+        std::string{msg->getCcs_report_name()},
         msg->getCcs_report_id_gnb(),
         msg->getCcs_report_id_ue(),
         msg->getCcs_report_id_gnb_gw(),
@@ -78,18 +75,30 @@ void SubscriberStore::appendNodeCCSFeedback(DtwinSub *msg) {
         msg->getTimestamp()
     };
 
-    if(it != std::end(_subscriber_ccs_record))
-    {
-        (*it) = subscriber_info;
+    std::string node_name = subscriber_info.name;
+    auto it = std::find_if(std::begin(_subscriber_ccs_record), std::end(_subscriber_ccs_record), [&node_name] (Node const& val) {return val.name == node_name;});
+    if(it != std::end(_subscriber_ccs_record)) {
+        if((*it).timestamp < subscriber_info.timestamp)
+            (*it) = subscriber_info;
     }
     else
-    {
         _subscriber_ccs_record.push_back(subscriber_info);
-    }
 }
 
 void SubscriberStore::checkSubscriberExpiry() {
-    // TODO
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+    uint64_t current_nsec = (uint64_t) current_time.raw();
+    omnetpp::simtime_t max_age_sec = par("subscriberMaxAge").doubleValue();
+    uint64_t max_age_nsec = (uint64_t) max_age_sec.raw();
+
+    _subscriber_ccs_record.erase(std::remove_if(std::begin(_subscriber_ccs_record), std::end(_subscriber_ccs_record),
+            [&current_nsec, &max_age_nsec] (Node const& val) {return (current_nsec - val.timestamp) >= max_age_nsec;}),
+            std::end(_subscriber_ccs_record));
+}
+
+std::vector<Node> SubscriberStore::readCCSReports()
+{
+    return _subscriber_ccs_record;
 }
 
 } // namespace convoy_architecture
