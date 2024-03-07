@@ -129,7 +129,11 @@ void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
 
     // Update station hop information for each dtwin  and forward dtwin message to application layer
     ObjectList *msg_dtwin_pub = mcs_packet->getMsg_dtwin_pub().dup();
+
+    /* Station hop is set using subscriber application instead of dtwin publish application */
+    /*
     int n_objects = msg_dtwin_pub->getN_objects();
+
     std::string station_id = std::string(msg_dtwin_pub->getStation_id());
     auto addressTag = packet->getTag<inet::L3AddressReq>();
     inet::L3Address hop_address = addressTag->getSrcAddress();
@@ -139,6 +143,7 @@ void BackendMessaging::handleDtwinFromLl(omnetpp::cMessage *msg)
         _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(dtwin_id, hop_address));
         EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromLl(): dtwin-station-hop " << dtwin_id << ": " << hop_address.str() << std::endl;
     }
+    */
 
     send(msg_dtwin_pub, "outUlDtwin");
 }
@@ -215,20 +220,13 @@ void BackendMessaging::handleDtwinSubFromLl(omnetpp::cMessage *msg)
 
     // Update station hop information for each dtwin  and forward dtwin message to application layer
     DtwinSub *msg_dtwin_sub = mcs_packet->getMsg_dtwin_sub().dup();
-
-    /*
-    int n_objects = msg_dtwin_sub->getN_objects();
-    std::string station_id = std::string(msg_dtwin_sub->getStation_id());
     auto addressTag = packet->getTag<inet::L3AddressReq>();
     inet::L3Address hop_address = addressTag->getSrcAddress();
-    for (int obj_index=0;obj_index<n_objects;obj_index++)
-    {
-        std::string dtwin_id = std::string(msg_dtwin_pub->getObject_id(obj_index));
-        _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(dtwin_id, hop_address));
-        EV_INFO << current_time <<" - BackendMessaging::handleDtwinFromLl(): dtwin-station-hop " << dtwin_id << ": " << hop_address.str() << std::endl;
-    }
+    std::string subscriber_id = std::string(msg_dtwin_sub->getSubscriber_id());
+    _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(subscriber_id, hop_address));
 
-    send(msg_dtwin_pub, "outUlDtwin");
-    */
+    EV_INFO << current_time <<" - BackendMessaging::handleDtwinSubFromLl(): subscriber-station-hop " << subscriber_id << ": " << hop_address.str() << std::endl;
+
+    send(msg_dtwin_sub, "outUlDtwinSub");
 }
 } // namespace convoy_architecture
