@@ -17,6 +17,7 @@
 #define __CONVOY_ARCHITECTURE_SUBSCRIBERSTORE_H_
 
 #include <omnetpp.h>
+#include "common/defs.h"
 #include "messages/DtwinSub_m.h"
 
 namespace convoy_architecture {
@@ -29,9 +30,10 @@ class SubscriberStore : public omnetpp::cSimpleModule
   private:
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
+    void checkSubscriberExpiry();
 
     omnetpp::cMessage *_subscriber_expiry_check_event{nullptr};
-    int _n_subscribers{0};
+    std::vector<Node> _subscriber_ccs_record;
 
   public:
     ~SubscriberStore() {

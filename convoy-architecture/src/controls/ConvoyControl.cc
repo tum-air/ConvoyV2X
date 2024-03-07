@@ -759,7 +759,7 @@ void ConvoyControl::setClusterBroadcastParameters()
 
 }
 
-ConvoyControl::Role ConvoyControl::getClusterRole()
+Role ConvoyControl::getClusterRole()
 {
     return (_cluster_role);
 }
@@ -789,8 +789,8 @@ void ConvoyControl::receiveCCSMessage(ConvoyControlService *ccs_message)
     int max_res_blks = ccs_message->getMax_rb();
     double tx_power = ccs_message->getTx_power();
     double tx_power_gw = ccs_message->getTx_power_gw();
-    ConvoyControl::Role convoy_role = (ConvoyControl::Role) ccs_message->getConvoy_role();
-    ConvoyControl::Role cluster_role = (ConvoyControl::Role) ccs_message->getCluster_role();
+    Role convoy_role = (Role) ccs_message->getConvoy_role();
+    Role cluster_role = (Role) ccs_message->getCluster_role();
     int convoy_id = ccs_message->getConvoy_id();
     int cluster_id = ccs_message->getCluster_id();
     int convoy_id_gw = ccs_message->getConvoy_id_gw();
@@ -801,17 +801,17 @@ void ConvoyControl::receiveCCSMessage(ConvoyControlService *ccs_message)
     {
         enforceMembership(convoy_role, cluster_role, convoy_id, cluster_id, convoy_id_gw, cluster_id_gw);
         enforceTxPower(cluster_role, tx_power, tx_power_gw);
-        if(cluster_role == ConvoyControl::Role::MANAGER)
+        if(cluster_role == Role::MANAGER)
             enforceMaxResBlks(max_res_blks);
     }
 }
 
-void ConvoyControl::enforceMembership(ConvoyControl::Role convoy_role, ConvoyControl::Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
+void ConvoyControl::enforceMembership(Role convoy_role, Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
 {
     int old_convoy_id = _convoy_id;
-    ConvoyControl::Role old_convoy_role = _convoy_role;
+    Role old_convoy_role = _convoy_role;
     int old_cluster_id = _cluster_id;
-    ConvoyControl::Role old_cluster_role = _cluster_role;
+    Role old_cluster_role = _cluster_role;
 
     if((convoy_id != old_convoy_id) || (convoy_role != old_convoy_role))
         changeConvoy(convoy_role, convoy_id, convoy_id_gw);
@@ -821,28 +821,28 @@ void ConvoyControl::enforceMembership(ConvoyControl::Role convoy_role, ConvoyCon
         changeClusterRole(old_cluster_role, cluster_role, convoy_id, cluster_id, convoy_id_gw, cluster_id_gw);
 }
 
-void ConvoyControl::changeConvoy(ConvoyControl::Role convoy_role, int convoy_id, int convoy_id_gw)
+void ConvoyControl::changeConvoy(Role convoy_role, int convoy_id, int convoy_id_gw)
 {
-    if(convoy_role == ConvoyControl::Role::MANAGER)
+    if(convoy_role == Role::MANAGER)
         setAsConvoyManager(convoy_id);
     else
     {
         setAsConvoyMember(convoy_id);
-        if(convoy_role == ConvoyControl::Role::GATEWAY)
+        if(convoy_role == Role::GATEWAY)
             setAsConvoyGateway(convoy_id_gw);
     }
 }
 
-void ConvoyControl::changeCluster(ConvoyControl::Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
+void ConvoyControl::changeCluster(Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
 {
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    if(cluster_role == ConvoyControl::Role::MANAGER)
+    if(cluster_role == Role::MANAGER)
         setAsClusterManager(cluster_id);
     else
     {
         _cluster_id = cluster_id;
         setAsClusterMember(binder->getManagerId(convoy_id, cluster_id), 10.0);
-        if(cluster_role == ConvoyControl::Role::GATEWAY)
+        if(cluster_role == Role::GATEWAY)
         {
             _cluster_id_gw = cluster_id_gw;
             attachClusterGateway(binder->getManagerId(convoy_id_gw, cluster_id_gw), 10.0);
@@ -850,7 +850,7 @@ void ConvoyControl::changeCluster(ConvoyControl::Role cluster_role, int convoy_i
     }
 }
 
-void ConvoyControl::changeClusterRole(ConvoyControl::Role old_cluster_role, ConvoyControl::Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
+void ConvoyControl::changeClusterRole(Role old_cluster_role, Role cluster_role, int convoy_id, int cluster_id, int convoy_id_gw, int cluster_id_gw)
 {
     // Manager --> Member (changeCluster)
     // Manager --> Gateway (changeCluster)
@@ -859,12 +859,12 @@ void ConvoyControl::changeClusterRole(ConvoyControl::Role old_cluster_role, Conv
     // Gateway --> Manager (change cluster)
     // Gateway --> Member (just detach gateway)
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    if((old_cluster_role == ConvoyControl::Role::MEMBER) && (cluster_role == ConvoyControl::Role::GATEWAY))
+    if((old_cluster_role == Role::MEMBER) && (cluster_role == Role::GATEWAY))
     {
         cluster_id_gw = cluster_id_gw;
         attachClusterGateway(binder->getManagerId(convoy_id_gw, cluster_id_gw), 10.0);
     }
-    else if((old_cluster_role == ConvoyControl::Role::GATEWAY) && (cluster_role == ConvoyControl::Role::MEMBER))
+    else if((old_cluster_role == Role::GATEWAY) && (cluster_role == Role::MEMBER))
         detachClusterGateway();
 }
 
@@ -872,9 +872,9 @@ void ConvoyControl::enforceMaxResBlks(int max_res_blks)
 {
     //
 }
-void ConvoyControl::enforceTxPower(ConvoyControl::Role cluster_role, double tx_power, double tx_power_gw)
+void ConvoyControl::enforceTxPower(Role cluster_role, double tx_power, double tx_power_gw)
 {
-    if(cluster_role == ConvoyControl::Role::MANAGER)
+    if(cluster_role == Role::MANAGER)
     {
         LtePhyEnbD2D *manager_phy = check_and_cast<LtePhyEnbD2D *>(_manager_module->getSubmodule("cellularNic")->getSubmodule("phy"));
         manager_phy->setTxPower(tx_power);
@@ -883,7 +883,7 @@ void ConvoyControl::enforceTxPower(ConvoyControl::Role cluster_role, double tx_p
     {
         NRPhyUe *member_phy = check_and_cast<NRPhyUe *>(_member_module->getSubmodule("cellularNic")->getSubmodule("nrPhy"));
         member_phy->setTxPower(tx_power);
-        if(cluster_role == ConvoyControl::Role::GATEWAY)
+        if(cluster_role == Role::GATEWAY)
         {
             NRPhyUe *gateway_phy = check_and_cast<NRPhyUe *>(_gateway_module->getSubmodule("cellularNic")->getSubmodule("nrPhy"));
             gateway_phy->setTxPower(tx_power_gw);
@@ -899,19 +899,19 @@ void ConvoyControl::setAsConvoyGateway(int convoy_id)
 {
     // Set up convoy and configure node as convoy member
     _convoy_id_gw = convoy_id;
-    _convoy_role = ConvoyControl::Role::GATEWAY;
+    _convoy_role = Role::GATEWAY;
 }
 
 void ConvoyControl::attachClusterGateway(unsigned short cluster_id_gw, double cluster_rssi_gw)
 {
-    _cluster_role = ConvoyControl::Role::GATEWAY;
+    _cluster_role = Role::GATEWAY;
 
     // TODO GATEWAY
 }
 
 void ConvoyControl::detachClusterGateway()
 {
-    _cluster_role = ConvoyControl::Role::MEMBER;
+    _cluster_role = Role::MEMBER;
 }
 
 double ConvoyControl::getTxp()

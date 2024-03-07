@@ -39,4 +39,6 @@ message DtwinSub {
     double ccs_report_speed;
     double ccs_report_txp;
     double ccs_report_txp_gw;
+    int ccs_report_id_convoy;
+    int ccs_report_id_cluster;
 }

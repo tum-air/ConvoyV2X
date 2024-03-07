@@ -31,7 +31,6 @@ class ConvoyControl : public omnetpp::cSimpleModule, public omnetpp::cListener
     ~ConvoyControl();
     ConvoyControl();
     enum AgentStatus {STATUS_INIT_SCANNING, STATUS_INIT_LOCALIZING, STATUS_INIT_RUN};
-    enum Role {MANAGER, MEMBER, GATEWAY};
     virtual void receiveSignal(omnetpp::cComponent *source, omnetpp::simsignal_t signalID, omnetpp::cObject *obj, omnetpp::cObject *) override;
     void getPublisherNodeID(std::set<int> &publisher_node_id);
     void getPublisherNodeX(std::map<int, double> &publisher_node_x);

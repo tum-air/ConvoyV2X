@@ -22,37 +22,8 @@
 #include "veins_inet/VeinsInetMobility.h"
 #include "messages/ConvoyControlService_m.h"
 #include "common/defs.h"
-#include "controls/ConvoyControl.h"
 
 namespace convoy_architecture {
-
-struct Node {
-    std::string name;
-    int id_gnb;
-    int id_ue;
-    int id_gnb_gw;
-    int id_ue_gw;
-    StationType type;
-    ConvoyControl::Role role;
-    inet::Coord position;
-    double speed;
-    double txp;
-    double txp_gw;
-};
-
-struct Cluster {
-    std::string name;
-    int id;
-    std::vector<Node> nodes;
-    double length;
-};
-
-struct Convoy {
-    std::string name;
-    int id;
-    std::vector<Cluster> clusters;
-    double length;
-};
 
 /**
  * TODO - Generated class

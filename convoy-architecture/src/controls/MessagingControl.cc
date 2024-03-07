@@ -231,7 +231,7 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
     int msg_hop_cluster = mcs_packet->getHop_cluster();
     int msg_dst_mac_id = mcs_packet->getDst_mac_id();
     int self_cluster = (int) ccs_agent_module->getManagerId();
-    int self_mac_id = (ccs_agent_module->getClusterRole() == ConvoyControl::Role::MANAGER)? ((int) ccs_agent_module->getManagerId()) : ((int) ccs_agent_module->getMemberId());
+    int self_mac_id = (ccs_agent_module->getClusterRole() == Role::MANAGER)? ((int) ccs_agent_module->getManagerId()) : ((int) ccs_agent_module->getMemberId());
 
     if(msg_dst_mac_id == self_mac_id)
     {
@@ -278,14 +278,14 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
                 send(convoy_orch_msg, "outUlAppConvCtl");
         }
     }
-    else if(ccs_agent_module->getClusterRole() == ConvoyControl::Role::MEMBER)
+    else if(ccs_agent_module->getClusterRole() == Role::MEMBER)
         EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): destination id does not match this member node, dropping message" << std::endl;
-    else if(ccs_agent_module->getClusterRole() == ConvoyControl::Role::GATEWAY)
+    else if(ccs_agent_module->getClusterRole() == Role::GATEWAY)
     {
         // TODO: Message to be forwarded to gateway if a route to destination cluster is available, else to be dropped.
         EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): destination id does not match this gateway node, dropping message for now" << std::endl;
     }
-    else if(ccs_agent_module->getClusterRole() == ConvoyControl::Role::MANAGER)
+    else if(ccs_agent_module->getClusterRole() == Role::MANAGER)
     {
         if (self_cluster == mcs_packet->getDst_cluster())
         {
@@ -350,7 +350,7 @@ void MessagingControl::routeMessageFromUlToDestination(omnetpp::cMessage *msg, i
 
     // Setup source and destination ids
     mcs_packet->setSrc_cluster((int) ccs_agent_module->getManagerId());
-    int src_mac_id = (ccs_agent_module->getClusterRole() == ConvoyControl::Role::MANAGER)? ((int) ccs_agent_module->getManagerId()) : ((int) ccs_agent_module->getMemberId());
+    int src_mac_id = (ccs_agent_module->getClusterRole() == Role::MANAGER)? ((int) ccs_agent_module->getManagerId()) : ((int) ccs_agent_module->getMemberId());
     mcs_packet->setSrc_mac_id(src_mac_id);
     mcs_packet->setDst_cluster(binder->getNextHop((MacNodeId) destination_id)); // Can also be added to publisher broadcast
     mcs_packet->setDst_mac_id(destination_id);
@@ -408,11 +408,11 @@ void MessagingControl::routeMessageFromUlToDestination(omnetpp::cMessage *msg, i
     int hop_mac_id = 0;
     switch (ccs_agent_module->getClusterRole())
     {
-    case ConvoyControl::Role::MEMBER:
+    case Role::MEMBER:
         hop_cluster = ccs_agent_module->getManagerId();
         hop_mac_id = ccs_agent_module->getManagerId();
         break;
-    case ConvoyControl::Role::GATEWAY:
+    case Role::GATEWAY:
         if(mcs_packet->getDst_cluster() == ccs_agent_module->getManagerId())
         {
             hop_cluster = ccs_agent_module->getManagerId();

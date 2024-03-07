@@ -140,15 +140,15 @@ void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
             msg->setCcs_report_cluster_id(ccs_agent_module->getClusterIdCCS());
             switch(ccs_agent_module->getClusterRole())
             {
-                case ConvoyControl::Role::MANAGER:
+                case Role::MANAGER:
                     msg->setCcs_report_id_ue(ccs_agent_module->getManagerId());
                     msg->setCcs_report_id_gnb(ccs_agent_module->getManagerId());
                     break;
-                case ConvoyControl::Role::MEMBER:
+                case Role::MEMBER:
                     msg->setCcs_report_id_ue(ccs_agent_module->getMemberId());
                     msg->setCcs_report_id_gnb(binder->getNextHop(ccs_agent_module->getMemberId()));
                     break;
-                case ConvoyControl::Role::GATEWAY:
+                case Role::GATEWAY:
                     msg->setCcs_report_id_ue(ccs_agent_module->getMemberId());
                     msg->setCcs_report_id_gnb(binder->getNextHop(ccs_agent_module->getMemberId()));
                     msg->setCcs_report_id_ue_gw(ccs_agent_module->getGatewayId());
@@ -172,6 +172,9 @@ void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
 
             msg->setCcs_report_txp(ccs_agent_module->getTxp());
             msg->setCcs_report_txp_gw(ccs_agent_module->getTxpGw());
+
+            msg->setCcs_report_id_convoy(ccs_agent_module->getConvoyIdCCS());
+            msg->setCcs_report_id_cluster(ccs_agent_module->getClusterIdCCS());
         }
     }
 }
