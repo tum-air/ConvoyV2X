@@ -41,7 +41,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
         if (_subscriber_expiry_check_event != nullptr)
             cancelAndDelete(_subscriber_expiry_check_event);
     }
-    std::vector<Node> readCCSReports();
+    const std::vector<Node>& readCCSReports() const;
 };
 
 } // namespace convoy_architecture

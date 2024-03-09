@@ -22,6 +22,7 @@
 #include "veins_inet/VeinsInetMobility.h"
 #include "messages/ConvoyControlService_m.h"
 #include "common/defs.h"
+#include "stores/SubscriberStore.h"
 
 namespace convoy_architecture {
 
@@ -33,7 +34,6 @@ class ConvoyOrchestration : public omnetpp::cSimpleModule
   private:
     omnetpp::cMessage* _start_event;
     omnetpp::cMessage* _update_event;
-    DtwinStore* _dtwin_store;
     ObjectList* _dtwin;
     std::vector<std::string> _orch_ip_node_id;
     std::vector<inet::Coord> _orch_ip_node_pos;
@@ -42,9 +42,11 @@ class ConvoyOrchestration : public omnetpp::cSimpleModule
     ConvoyDirection _convoy_direction;
 
     /* ----- */
+    DtwinStore* _dtwin_store;
+    SubscriberStore* _subscriber_store;
     std::vector<Convoy> _current_state;
     std::vector<Convoy> _desired_state;
-    void estimate_actual_state();
+    void estimate_actual_state(const std::vector<Node>&, const ObjectList*);
     void compute_desired_state();
     void enforce_desired_state();
     /* ----- */

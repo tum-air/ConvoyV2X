@@ -44,6 +44,7 @@ void ConvoyOrchestration::initialize()
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
     _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+    _subscriber_store = check_and_cast<SubscriberStore*>(this->getParentModule()->getSubmodule("subscriberStore"));
 
     if(par("stopTime").doubleValue() > start_time)
     {
@@ -67,23 +68,15 @@ void ConvoyOrchestration::handleMessage(omnetpp::cMessage *msg)
         }
         else if (msg == _update_event)
         {
-            EV_INFO << current_time <<" - ConvoyOrchestration::handleMessage(): " << "Reading from dtwin store, executing orchestration step and publishing ccs messages " << std::endl;
+            EV_INFO << current_time <<" - ConvoyOrchestration::handleMessage(): " << "Executing orchestration step" << std::endl;
 
-            // 1. Read current digital twin from store
-            _dtwin = _dtwin_store->readFromStore();
+            ObjectList* dtwins = _dtwin_store->readFromStore();
+            estimate_actual_state(_subscriber_store->readCCSReports(), dtwins);
+            compute_desired_state();
+            enforce_desired_state();
 
-            // 2. Prepare data for orchestration decision
-            formatInput();
-
-            // 3. Perform orchestration step
-            computeOutput();
-
-            // 4. Send out ccs messages
-            transferOutput();
-
-            // 5. Clear dtwin data for next cycle
-            if(_dtwin != nullptr)
-                delete _dtwin;
+            if(dtwins != nullptr)
+                delete dtwins;
         }
         scheduleAfter(par("updateRate").doubleValue(), _update_event);
     }
@@ -94,6 +87,24 @@ void ConvoyOrchestration::handleMessage(omnetpp::cMessage *msg)
         cancelEvent(_update_event);
     }
 }
+
+
+/* ----- */
+void ConvoyOrchestration::estimate_actual_state(const std::vector<Node>& ccs_reports, const ObjectList* dtwins) {
+    std::vector<Node> unique_convoys;
+    std::unique_copy(std::begin(ccs_reports), std::end(ccs_reports), std::back_inserter(unique_convoys),
+            [] (const Node& n1, const Node& n2) {return n2.id_convoy != n1.id_convoy;});
+    _current_state.resize(unique_convoys.size());
+}
+
+void ConvoyOrchestration::compute_desired_state() {
+    //
+}
+
+void ConvoyOrchestration::enforce_desired_state() {
+    //
+}
+/* ----- */
 
 void ConvoyOrchestration::formatInput()
 {
@@ -158,20 +169,5 @@ void ConvoyOrchestration::transferOutput()
     for(int node_index=0; node_index<_orch_op_node_cc.size(); node_index++)
         send(_orch_op_node_cc.at(node_index), "out");
 }
-
-
-/* ----- */
-void ConvoyOrchestration::estimate_actual_state() {
-    //
-}
-
-void ConvoyOrchestration::compute_desired_state() {
-    //
-}
-
-void ConvoyOrchestration::enforce_desired_state() {
-    //
-}
-/* ----- */
 
 } // namespace convoy_architecture

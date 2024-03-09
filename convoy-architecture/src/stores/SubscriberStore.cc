@@ -96,7 +96,7 @@ void SubscriberStore::checkSubscriberExpiry() {
             std::end(_subscriber_ccs_record));
 }
 
-std::vector<Node> SubscriberStore::readCCSReports()
+const std::vector<Node>& SubscriberStore::readCCSReports() const
 {
     return _subscriber_ccs_record;
 }
