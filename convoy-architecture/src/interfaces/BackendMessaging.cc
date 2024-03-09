@@ -62,9 +62,9 @@ void BackendMessaging::handleMessage(omnetpp::cMessage *msg)
             handleConvoyOrchFromLl(msg);
             delete msg;
         }
-        if(msg->arrivedOn("inMcsDtwinSub"))
+        if(msg->arrivedOn("inMcsDtwinSub") || msg->arrivedOn("inUlDtwinSub"))
         {
-            EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin subscription message from mcs agent" << std::endl;
+            EV_INFO << current_time <<" - BackendMessaging::handleMessage(): " << "Received dtwin subscription message from mcs agent / upper layer" << std::endl;
             handleDtwinSubFromMcs(msg);
             delete msg;
         }

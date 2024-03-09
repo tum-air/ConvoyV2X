@@ -88,7 +88,7 @@ module WrapperNode
             subscriberType = parent.subscriberType;
         }
         appDtwinPub: DtwinPublisher if hasDtwinPub {
-            @display("p=100,150;is=s");
+            @display("p=150,150;is=s");
         }
         appCoopMan: CooperativeManeuver if hasCoopMan {
             @display("p=400,150;is=s");
@@ -98,8 +98,12 @@ module WrapperNode
             stationType = parent.detectorStationType;
         }
         bmsAgent: BackendMessaging if hasDtwinPub {
-            @display("p=100,250;is=s");
+            @display("p=150,250;is=s");
             destinationModuleDtwin = parent.backend_interface_name;
+        }
+        ccsReport: DtwinSubscriber if hasDtwinPub {
+            @display("p=50,150;is=s");
+            subscriberType = parent.subscriberType;
         }
     connections allowunconnected:
         mcsAgent.outLlAppDtwinPub --> outAppDtwinPub;
@@ -128,4 +132,6 @@ module WrapperNode
 		bmsAgent.outMcsAgent --> mcsAgent.inBmsAgent if hasDtwinPub;
 		mcsAgent.outBmsDtwinSub --> bmsAgent.inMcsDtwinSub if hasDtwinPub;
 		inAppConvoyOrchBknd --> bmsAgent.inLlConvoyOrch if hasDtwinPub;
+		
+		bmsAgent.inUlDtwinSub <-- ccsReport.out_sub if hasDtwinPub;
 }
