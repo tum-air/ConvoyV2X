@@ -59,6 +59,7 @@ module WrapperNode
         output outAppConvCtl;
         input inAppConvCtl;
         output outAppDtwinPubBknd;
+        output outAppDtwinSubBknd;
         input inAppConvoyOrchBknd;    
     submodules:
         mobility: <mobilityType> like IMobility {
@@ -104,6 +105,7 @@ module WrapperNode
         ccsReport: DtwinSubscriber if hasDtwinPub {
             @display("p=50,150;is=s");
             subscriberType = parent.subscriberType;
+            startTime = 75.0s;
         }
     connections allowunconnected:
         mcsAgent.outLlAppDtwinPub --> outAppDtwinPub;
@@ -129,6 +131,7 @@ module WrapperNode
 		
 		appDtwinPub.out_bknd --> bmsAgent.inUlDtwin if hasDtwinPub;
 		bmsAgent.outLlDtwin --> outAppDtwinPubBknd if hasDtwinPub;
+		bmsAgent.outLlDtwinSub --> outAppDtwinSubBknd if hasDtwinPub;
 		bmsAgent.outMcsAgent --> mcsAgent.inBmsAgent if hasDtwinPub;
 		mcsAgent.outBmsDtwinSub --> bmsAgent.inMcsDtwinSub if hasDtwinPub;
 		inAppConvoyOrchBknd --> bmsAgent.inLlConvoyOrch if hasDtwinPub;

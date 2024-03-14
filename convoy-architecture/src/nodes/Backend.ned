@@ -65,8 +65,8 @@ module Backend extends TransportLayerNodeBase
         }
         ioAppDtwinSub: UdpSocketIo {
             @display("p=250,130;is=s");
-            localPort = 21001;
-            destPort = 21002;
+            localPort = 51000;
+            destPort = 51000;
         }
         subscriberStore: SubscriberStore {
             @display("p=250,20");

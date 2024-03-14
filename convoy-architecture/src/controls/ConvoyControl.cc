@@ -650,6 +650,14 @@ void ConvoyControl::connectToWrapperNode(omnetpp::cModule* cluster_module)
     wrapper_gate = getParentModule()->gate("inAppCoopMan");
     cluster_gate = cluster_module->gate("toAppCoopMan");
     cluster_gate->connectTo(wrapper_gate);
+
+    // AppConvCtl
+    wrapper_gate = getParentModule()->gate("outAppConvCtl");
+    cluster_gate = cluster_module->gate("fromAppConvCtl");
+    wrapper_gate->connectTo(cluster_gate);
+    wrapper_gate = getParentModule()->gate("inAppConvCtl");
+    cluster_gate = cluster_module->gate("toAppConvCtl");
+    cluster_gate->connectTo(wrapper_gate);
 }
 
 void ConvoyControl::removeConnectionsToWrapperNode(omnetpp::cModule* cluster_module)
@@ -678,6 +686,14 @@ void ConvoyControl::removeConnectionsToWrapperNode(omnetpp::cModule* cluster_mod
         if(cluster_gate->isConnected())
             cluster_gate->disconnect();
         cluster_gate = cluster_module->gate("toAppCoopMan");
+        if(cluster_gate->isConnected())
+            cluster_gate->disconnect();
+
+        // AppConvCtl
+        cluster_gate = cluster_module->gate("fromAppConvCtl");
+        if(cluster_gate->isConnected())
+            cluster_gate->disconnect();
+        cluster_gate = cluster_module->gate("toAppConvCtl");
         if(cluster_gate->isConnected())
             cluster_gate->disconnect();
     }
@@ -799,10 +815,12 @@ void ConvoyControl::receiveCCSMessage(ConvoyControlService *ccs_message)
     // Act further only if the ccs agent is ready
     if(_agent_status == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
     {
+        /* TODO
         enforceMembership(convoy_role, cluster_role, convoy_id, cluster_id, convoy_id_gw, cluster_id_gw);
         enforceTxPower(cluster_role, tx_power, tx_power_gw);
         if(cluster_role == Role::MANAGER)
             enforceMaxResBlks(max_res_blks);
+        */
     }
 }
 

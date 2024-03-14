@@ -114,8 +114,13 @@ void MessagingControl::handleMessage(omnetpp::cMessage *msg)
         }
         else if(msg->arrivedOn("inBmsAgent"))
         {
-            EV_INFO << current_time <<" - MessagingControl::handleMessage(): " << "Received convoy control service message" << std::endl;
+            EV_INFO << current_time <<" - MessagingControl::handleMessage(): " << "Received convoy control service message from bmsAgent" << std::endl;
             handleCCSMsgFromBMS(msg);
+        }
+        else if(msg->arrivedOn("inLlAppConvCtl"))
+        {
+            EV_INFO << current_time <<" - MessagingControl::handleMessage(): " << "Received convoy control service message from lower layer" << std::endl;
+            handleConvCtlMsgFromLl(msg);
         }
     }
     else if (msg == _subscriber_expiry_check_event)
@@ -274,8 +279,10 @@ void MessagingControl::routeMessageFromLlToDestination(omnetpp::cMessage *msg, M
         {
             // Forward ccs message to ccs agent layer
             ConvoyControlService *convoy_orch_msg = mcs_packet->getMsg_ccs().dup();
-            if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
+            if(ccs_agent_module->getAgentStatus() != ConvoyControl::AgentStatus::STATUS_INIT_SCANNING)
                 send(convoy_orch_msg, "outUlAppConvCtl");
+            else
+                EV_INFO << current_time <<" - MessagingControl::routeMessageFromLlToDestination(): Convoy control agent not done scanning for cluster broadcast messages, ignoring convoy control message" << std::endl;
         }
     }
     else if(ccs_agent_module->getClusterRole() == Role::MEMBER)
@@ -557,7 +564,7 @@ void MessagingControl::handleCCSMsgFromBMS(omnetpp::cMessage *msg)
     if(destination_node_id == this_node_id)
     {
         // If yes, send the message to the ccsAgent - ensure that the ccs agent is ready beforehand
-        if(ccs_agent_module->getAgentStatus() == ConvoyControl::AgentStatus::STATUS_INIT_RUN)
+        if(ccs_agent_module->getAgentStatus() != ConvoyControl::AgentStatus::STATUS_INIT_SCANNING)
             send(convoy_orch_msg, "outUlAppConvCtl");
     }
     else
@@ -569,7 +576,7 @@ void MessagingControl::handleCCSMsgFromBMS(omnetpp::cMessage *msg)
             // Forward ccs message to subscriber if present
             auto it_element = _subscriber_address.find(destination_node_id);
             if(it_element != _subscriber_address.end())
-                routeMessageFromUlToDestination(msg, _subscriber_address[destination_node_id], MessagingControl::ApplicationType::CONVOY_CONTROL);
+                routeMessageFromUlToDestination(convoy_orch_msg, _subscriber_address[destination_node_id], MessagingControl::ApplicationType::CONVOY_CONTROL);
             else
                 EV_INFO << current_time <<" - MessagingControl::handleCCSMsgFromBMS(): subscriber " << destination_node_id << " unknown, ignoring ccs message" << std::endl;
         }

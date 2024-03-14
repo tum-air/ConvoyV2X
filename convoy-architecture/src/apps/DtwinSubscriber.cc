@@ -102,6 +102,8 @@ void DtwinSubscriber::sendDtwinSubscriptionMessage()
     sub_message->setRoi_tag(_roi_tag.c_str());
     sub_message->setQos_tag(_qos_tag.c_str());
     sub_message->setSubscriber_type(_subscriber_type.c_str());
+
+    appendCCSReport(sub_message);
     this->send(sub_message, "out_sub");
 }
 
@@ -162,9 +164,18 @@ void DtwinSubscriber::appendCCSReport(DtwinSub *msg)
             msg->setCcs_report_type(wrapper_node->getStationType());
             msg->setCcs_report_role(ccs_agent_module->getClusterRole());
 
-            veins::VeinsInetMobility* object_mobility_module = check_and_cast<veins::VeinsInetMobility*>(getParentModule()->getSubmodule("mobility"));
-            inet::Coord object_velocity = object_mobility_module->getCurrentVelocity();
-            inet::Coord object_position = object_mobility_module->getCurrentPosition();
+            inet::Coord object_velocity;
+            inet::Coord object_position;
+            if(wrapper_node->getStationType() == StationType::RSU) {
+                inet::IMobility *object_mobility_module = check_and_cast<inet::IMobility*>(getParentModule()->getSubmodule("mobility"));
+                object_position = object_mobility_module->getCurrentPosition();
+                object_velocity = object_mobility_module->getCurrentVelocity();
+            }
+            else {
+                veins::VeinsInetMobility* object_mobility_module = check_and_cast<veins::VeinsInetMobility*>(getParentModule()->getSubmodule("mobility"));
+                object_position = object_mobility_module->getCurrentPosition();
+                object_velocity = object_mobility_module->getCurrentVelocity();
+            }
             msg->setCcs_report_position_x(object_position.x);
             msg->setCcs_report_position_y(object_position.y);
             msg->setCcs_report_position_z(object_position.z);

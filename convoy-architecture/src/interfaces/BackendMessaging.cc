@@ -208,7 +208,7 @@ void BackendMessaging::handleDtwinSubFromMcs(omnetpp::cMessage *msg)
     portReq->setDestPort(par("destinationPortDtwinSub").intValue());
 
     EV_INFO << current_time <<" - BackendMessaging::handleDtwinSubFromMcs(): sending mcs packet to backend interface device" << std::endl;
-    send(packet, "outLlDtwin");
+    send(packet, "outLlDtwinSub");
 }
 
 void BackendMessaging::handleDtwinSubFromLl(omnetpp::cMessage *msg)
@@ -220,7 +220,7 @@ void BackendMessaging::handleDtwinSubFromLl(omnetpp::cMessage *msg)
 
     // Update station hop information for each dtwin  and forward dtwin message to application layer
     DtwinSub *msg_dtwin_sub = mcs_packet->getMsg_dtwin_sub().dup();
-    auto addressTag = packet->getTag<inet::L3AddressReq>();
+    auto addressTag = packet->getTag<inet::L3AddressInd>();
     inet::L3Address hop_address = addressTag->getSrcAddress();
     std::string subscriber_id = std::string(msg_dtwin_sub->getSubscriber_id());
     _dtwin_station_hop.insert(std::pair<std::string, inet::L3Address>(subscriber_id, hop_address));
