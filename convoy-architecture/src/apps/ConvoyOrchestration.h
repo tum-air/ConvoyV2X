@@ -34,29 +34,17 @@ class ConvoyOrchestration : public omnetpp::cSimpleModule
   private:
     omnetpp::cMessage* _start_event;
     omnetpp::cMessage* _update_event;
-    ObjectList* _dtwin;
-    std::vector<std::string> _orch_ip_node_id;
-    std::vector<inet::Coord> _orch_ip_node_pos;
-    std::vector<std::string> _orch_op_node_id;
-    std::vector<ConvoyControlService*> _orch_op_node_cc;
-    ConvoyDirection _convoy_direction;
-
-    /* ----- */
     DtwinStore* _dtwin_store;
     SubscriberStore* _subscriber_store;
-    std::vector<Convoy> _current_state;
-    std::vector<Convoy> _desired_state;
-    void estimate_actual_state(const std::vector<Node>&, const ObjectList*);
+    std::vector<Node> _current_state;
+    std::vector<Node> _desired_state;
+    void estimate_actual_state();
     void compute_desired_state();
     void enforce_desired_state();
-    /* ----- */
 
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
-    void formatInput();
-    void computeOutput();
-    void transferOutput();
-    std::vector<ConvoyControlService*> executeOrchestrationStep(std::vector<inet::Coord>);
+
   public:
       ~ConvoyOrchestration();
       ConvoyOrchestration();

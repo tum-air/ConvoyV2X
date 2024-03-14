@@ -17,35 +17,35 @@ enum ConvoyDirection {UNDEFINED, TOP, DOWN};
 enum Role {MANAGER, MEMBER, GATEWAY};
 
 struct Node {
-    std::string name;
-    int id_gnb;
-    int id_ue;
-    int id_gnb_gw;
-    int id_ue_gw;
-    StationType type;
-    Role role;
+    std::string name{std::string("")};
+    int id_gnb {0};
+    int id_ue {0};
+    int id_gnb_gw {0};
+    int id_ue_gw {0};
+    StationType type {StationType::RSU};
+    Role role {Role::MEMBER};
     inet::Coord position;
-    double speed;
-    double txp;
-    double txp_gw;
-    int direction;
-    int id_convoy;
-    int id_cluster;
-    uint64_t timestamp;
+    double speed {0};
+    double txp {0};
+    double txp_gw {0};
+    int direction {0};
+    int id_convoy {0};
+    int id_cluster {0};
+    uint64_t timestamp {0};
 };
 
 struct Cluster {
-    std::string name;
-    int id;
-    std::vector<Node> nodes;
-    double length;
+    std::string name {std::string("")};
+    int id {0};
+    std::vector<Node> nodes {};
+    double length {0};
 };
 
 struct Convoy {
-    std::string name;
-    int id;
-    std::vector<Cluster> clusters;
-    double length;
+    std::string name {std::string("")};
+    int id {0};
+    std::vector<Cluster> clusters {};
+    double length {0};
 };
 
 } // namespace convoy_architecture
