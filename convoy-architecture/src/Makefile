@@ -44,7 +44,6 @@ OBJS = \
     $O/controls/ConvoyControl.o \
     $O/controls/MembershipControl.o \
     $O/controls/MessagingControl.o \
-    $O/controls/MessagingControlDtwinSubscription.o \
     $O/interfaces/BackendMessaging.o \
     $O/interfaces/MultipleInputSingleOutput.o \
     $O/nodes/WrapperNode.o \
