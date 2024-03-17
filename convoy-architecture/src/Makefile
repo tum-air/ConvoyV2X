@@ -42,6 +42,7 @@ OBJS = \
     $O/apps/Localizer.o \
     $O/apps/Tracker.o \
     $O/controls/ConvoyControl.o \
+    $O/controls/MembershipControl.o \
     $O/controls/MessagingControl.o \
     $O/controls/MessagingControlDtwinSubscription.o \
     $O/interfaces/BackendMessaging.o \
