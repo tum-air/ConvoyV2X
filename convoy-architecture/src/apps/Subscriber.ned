@@ -15,6 +15,7 @@ simple Subscriber
         volatile double stopTime @unit(s) = default(1000.000s);
         volatile double updateRate @unit(s) = default(1.000s);
         volatile string subscriberType = default("v2v");
+        @application;
         @display("i=block/sink");
         @class("convoy_architecture::Subscriber");
 

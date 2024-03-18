@@ -1,19 +1,7 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
 
 #include "BaseNode.h"
+
+namespace convoy_architecture {
 
 Define_Module(BaseNode);
 
@@ -22,7 +10,15 @@ void BaseNode::initialize()
     // TODO - Generated method body
 }
 
-void BaseNode::handleMessage(cMessage *msg)
+void BaseNode::handleMessage(omnetpp::cMessage *msg)
 {
     // TODO - Generated method body
 }
+
+inet::Coord BaseNode::getCurrentLocation()
+{
+    inet::IMobility* mobility_module = check_and_cast<inet::IMobility*>(getSubmodule("mobility"));
+    return(mobility_module->getCurrentPosition());
+}
+
+} // namespace convoy_architecture

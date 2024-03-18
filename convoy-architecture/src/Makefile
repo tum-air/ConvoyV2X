@@ -40,6 +40,7 @@ OBJS = \
     $O/apps/DtwinPublisher.o \
     $O/apps/DtwinSubscriber.o \
     $O/apps/Localizer.o \
+    $O/apps/Maneuver.o \
     $O/apps/Publisher.o \
     $O/apps/Subscriber.o \
     $O/apps/Tracker.o \
