@@ -40,12 +40,16 @@ OBJS = \
     $O/apps/DtwinPublisher.o \
     $O/apps/DtwinSubscriber.o \
     $O/apps/Localizer.o \
+    $O/apps/Publisher.o \
+    $O/apps/Subscriber.o \
     $O/apps/Tracker.o \
     $O/controls/ConvoyControl.o \
     $O/controls/MembershipControl.o \
     $O/controls/MessagingControl.o \
+    $O/controls/RoutingControl.o \
     $O/interfaces/BackendMessaging.o \
     $O/interfaces/MultipleInputSingleOutput.o \
+    $O/nodes/BaseNode.o \
     $O/nodes/WrapperNode.o \
     $O/stores/DtwinStore.o \
     $O/stores/SubscriberStore.o \
