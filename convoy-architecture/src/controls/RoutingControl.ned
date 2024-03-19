@@ -28,6 +28,7 @@ simple RoutingControl
         input inLlManeuver;
         
         output outUlMemberControl;
+        input inUlMemberControl;
         input inUlMemberReport;
         
         output outLlMemberControl;

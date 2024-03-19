@@ -63,7 +63,9 @@ OBJS = \
     $O/messages/DtwinSub_m.o \
     $O/messages/MemberStatus_m.o \
     $O/messages/ObjectList_m.o \
-    $O/packets/MCSPacket_m.o
+    $O/messages/Orchestration_m.o \
+    $O/packets/MCSPacket_m.o \
+    $O/packets/TransportPacket_m.o
 
 # Message files
 MSGFILES = \
@@ -73,7 +75,9 @@ MSGFILES = \
     messages/DtwinSub.msg \
     messages/MemberStatus.msg \
     messages/ObjectList.msg \
-    packets/MCSPacket.msg
+    messages/Orchestration.msg \
+    packets/MCSPacket.msg \
+    packets/TransportPacket.msg
 
 # SM files
 SMFILES =
