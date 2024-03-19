@@ -15,4 +15,9 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
     // TODO - Generated method body
 }
 
+const std::vector<Publication>& MembershipControl::readPublishers() const
+{
+    return _publishers;
+}
+
 } // namespace convoy_architecture

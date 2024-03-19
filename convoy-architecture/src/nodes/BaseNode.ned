@@ -94,6 +94,7 @@ module BaseNode
         routingControl: RoutingControl {
             @display("p=250,350;is=s");
             stationType = parent.stationType;
+            convoyDirection = parent.convoyDirection;
         }
         subscriberStore: SubscriberStore if hasDtwinPub {
                 @display("p=400,150;is=s");

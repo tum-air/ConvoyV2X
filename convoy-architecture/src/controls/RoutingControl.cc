@@ -5,6 +5,8 @@
 #include "messages/CoopManeuver_m.h"
 #include "messages/MemberStatus_m.h"
 #include "messages/Orchestration_m.h"
+#include "controls/MembershipControl.h"
+#include "apps/Localizer.h"
 
 namespace convoy_architecture {
 
@@ -32,16 +34,74 @@ void RoutingControl::handleMessage(omnetpp::cMessage *msg) {
 }
 
 void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
+
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
     EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Received subscriber message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlSubscriber") {
+
         // Message received from upper layer
-        // check_and_cast<DtwinSub *>(msg);
+        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+
+            MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+            if(membership_control->isInitialized()) {
+
+                ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
+
+                // Get the dtwin publisher infos
+                const std::vector<Publication>& publishers = membership_control->readPublishers();
+
+                // Decide which publishers are to receive the subscription request
+                // First extract those publishers which cover the same direction
+                std::vector<Publication> publishers_same_direction;
+                std::copy_if(std::begin(publishers), std::end(publishers), std::back_inserter(publishers_same_direction), [direction] (Publication const& p) {
+                    return (p.direction == direction);
+                });
+
+                // If the node has not completed initial localization
+                Localizer *app_localizer = check_and_cast<Localizer *>(getParentModule()->getSubmodule("appLocalizer"));
+                std::vector<Publication> publishers_filtered;
+                if(!app_localizer->isLocalized()) {
+                    // send request to all publishers in the same direction and which are in the same cluster
+                    int cluster = membership_control->getManagerID();
+                    std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [cluster] (Publication const& p) {
+                        return (p.cluster == cluster);
+                    });
+                }
+                else {
+                    // else send request to those publishers with matching fov
+                    double ego_x = app_localizer->readEgoPositionX();
+                    DtwinSub *msg_subscription = check_and_cast<DtwinSub *>(msg);
+                    std::string roi = std::string{msg_subscription->getRoi_tag()};
+                    double ego_fov = par("roiNearby").doubleValue();
+                    if (roi == std::string("horizon"))
+                        ego_fov = par("roiHorizon").doubleValue();
+                    std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [ego_x, ego_fov] (Publication const& p) {
+                        double border_ego_min = ego_x - ego_fov;
+                        double border_ego_max = ego_x + ego_fov;
+                        double border_rsu_min = p.position.x - p.fov;
+                        double border_rsu_max = p.position.x + p.fov;
+                        bool ego_min_in_fov = (border_ego_min >= border_rsu_min) && (border_ego_min <= border_rsu_max);
+                        bool ego_max_in_fov = (border_ego_max >= border_rsu_min) && (border_ego_max <= border_rsu_max);
+                        return(ego_min_in_fov || ego_max_in_fov);
+                    });
+                }
+
+                // Send out the subscription requests
+                std::for_each(std::begin(publishers_filtered), std::end(publishers_filtered), [this, msg] (Publication const& p) {
+                    forwardToNextHop(msg, p.id, MessageType::SUBSCRIPTION);
+                });
+            }
+            else
+                delete msg;
+        }
+        else
+            delete msg;
     }
     else {
         // Message received from lower layer
+        // TODO
     }
 }
 void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
@@ -100,6 +160,9 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
     }
 }
 
+void RoutingControl::forwardToNextHop(omnetpp::cMessage *msg, int destination, MessageType type) {
+    //
+}
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
     //
 }

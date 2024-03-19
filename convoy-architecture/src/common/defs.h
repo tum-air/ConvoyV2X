@@ -16,6 +16,7 @@ enum StationType {VEHICLE,RSU};
 enum ConvoyDirection {UNDEFINED, TOP, DOWN};
 enum Role {MANAGER, MEMBER, GATEWAY};
 enum MessageType {SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
+enum MemberControlState {INITIALIZING, INITIALIZED};
 
 struct Node {
     std::string name{std::string("")};
@@ -55,6 +56,15 @@ struct Subscription {
     std::string roi {std::string("")};
     std::string qos {std::string("")};
     uint64_t timestamp {0};
+};
+
+struct Publication {
+    std::string name {std::string("")};
+    int id {0};
+    inet::Coord position {0.0, 0.0, 0.0};
+    double fov {0.0};
+    ConvoyDirection direction {ConvoyDirection::UNDEFINED};
+    int cluster;
 };
 
 } // namespace convoy_architecture
