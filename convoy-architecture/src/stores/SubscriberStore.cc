@@ -1,17 +1,3 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
 
 #include "SubscriberStore.h"
 
@@ -24,7 +10,6 @@ void SubscriberStore::initialize()
     omnetpp::simtime_t current_time = omnetpp::simTime();
     EV_INFO << current_time <<" - SubscriberStore::initialize(): " << "Initializing subscriber store " << std::endl;
 
-    double subscriber_max_age = par("subscriberMaxAge").doubleValue();
     _subscriber_expiry_check_event = new omnetpp::cMessage("subscriberExpiryCheck");
     scheduleAfter(par("subscriberCheckInterval").doubleValue(), _subscriber_expiry_check_event);
 
@@ -50,39 +35,28 @@ void SubscriberStore::handleMessage(omnetpp::cMessage *msg)
     {
         EV_INFO << current_time <<" - SubscriberStore::handleMessage(): " << "External message received through input gate " << std::endl;
         DtwinSub *msg_dtwin_sub = check_and_cast<DtwinSub *>(msg);
-        appendNodeCCSFeedback(msg_dtwin_sub);
         delete msg_dtwin_sub;
     }
 }
 
-void SubscriberStore::appendNodeCCSFeedback(DtwinSub *msg) {
+void SubscriberStore::updateSubscriberList(DtwinSub *msg) {
     // Edit existing entry if the node already exists and if the time stamp is more recent, else create a new entry
-    Node subscriber_info {
-        std::string{msg->getCcs_report_name()},
-        msg->getCcs_report_id_gnb(),
-        msg->getCcs_report_id_ue(),
-        msg->getCcs_report_id_gnb_gw(),
-        msg->getCcs_report_id_ue_gw(),
-        (StationType) msg->getCcs_report_type(),
-        (Role) msg->getCcs_report_role(),
-        inet::Coord{msg->getCcs_report_position_x(), msg->getCcs_report_position_y(), msg->getCcs_report_position_z()},
-        msg->getCcs_report_speed(),
-        msg->getCcs_report_txp(),
-        msg->getCcs_report_txp_gw(),
-        msg->getCcs_report_direction(),
-        msg->getCcs_report_id_convoy(),
-        msg->getCcs_report_id_cluster(),
+    Subscription subscriber {
+        std::string{msg->getSubscriber_id()},
+        msg->getSubscriber_address(),
+        std::string{msg->getRoi_tag()},
+        std::string{msg->getQos_tag()},
         msg->getTimestamp()
     };
 
-    std::string node_name = subscriber_info.name;
-    auto it = std::find_if(std::begin(_subscriber_ccs_record), std::end(_subscriber_ccs_record), [&node_name] (Node const& val) {return val.name == node_name;});
-    if(it != std::end(_subscriber_ccs_record)) {
-        if((*it).timestamp < subscriber_info.timestamp)
-            (*it) = subscriber_info;
+    std::string node_name = subscriber.name;
+    auto it = std::find_if(std::begin(_subscriber_record), std::end(_subscriber_record), [&node_name] (Subscription const& val) {return val.name == node_name;});
+    if(it != std::end(_subscriber_record)) {
+        if((*it).timestamp < subscriber.timestamp)
+            (*it) = subscriber;
     }
     else
-        _subscriber_ccs_record.push_back(subscriber_info);
+        _subscriber_record.push_back(subscriber);
 }
 
 void SubscriberStore::checkSubscriberExpiry() {
@@ -91,14 +65,14 @@ void SubscriberStore::checkSubscriberExpiry() {
     omnetpp::simtime_t max_age_sec = par("subscriberMaxAge").doubleValue();
     uint64_t max_age_nsec = (uint64_t) max_age_sec.raw();
 
-    _subscriber_ccs_record.erase(std::remove_if(std::begin(_subscriber_ccs_record), std::end(_subscriber_ccs_record),
-            [&current_nsec, &max_age_nsec] (Node const& val) {return (current_nsec - val.timestamp) >= max_age_nsec;}),
-            std::end(_subscriber_ccs_record));
+    _subscriber_record.erase(std::remove_if(std::begin(_subscriber_record), std::end(_subscriber_record),
+            [&current_nsec, &max_age_nsec] (Subscription const& val) {return (current_nsec - val.timestamp) >= max_age_nsec;}),
+            std::end(_subscriber_record));
 }
 
-const std::vector<Node>& SubscriberStore::readCCSReports() const
+const std::vector<Subscription>& SubscriberStore::readSubscriptions() const
 {
-    return _subscriber_ccs_record;
+    return _subscriber_record;
 }
 
 } // namespace convoy_architecture

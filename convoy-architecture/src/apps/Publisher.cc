@@ -55,9 +55,14 @@ void Publisher::handleMessage(omnetpp::cMessage *msg)
         else if (msg == _update_event)
         {
             EV_INFO << current_time <<" - Publisher::handleMessage(): " << "Reading from dtwin store and publishing" << std::endl;
-            this->sendDtwinMessage(this->readDtwin());
+            sendDtwinMessage(this->readDtwin());
         }
         scheduleAfter(_update_rate, _update_event);
+    }
+    else if(msg->arrivedOn("in"))
+    {
+        EV_INFO << current_time <<" - Publisher::handleMessage(): " << "Received subscription message, forwarding to store" << std::endl;
+        send(msg, "outSubscriberStore");
     }
 
     if ((current_time >= _stop_time) && _update_event->isScheduled())
@@ -80,7 +85,7 @@ void Publisher::sendDtwinMessage(ObjectList *dtwin_message)
     int n_objects = dtwin_message->getN_objects();
     if(n_objects > 0)
     {
-        this->send(dtwin_message, "out");
+        send(dtwin_message, "out");
         EV_INFO << current_time <<" - Publisher::sendDtwinMessage(): " << "Sent out dtwin message with n_objects = " << n_objects << std::endl;
     }
     else

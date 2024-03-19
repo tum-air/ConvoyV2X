@@ -53,6 +53,7 @@ OBJS = \
     $O/nodes/BaseNode.o \
     $O/nodes/WrapperNode.o \
     $O/stores/DtwinStore.o \
+    $O/stores/MemberStore.o \
     $O/stores/SubscriberStore.o \
     $O/world/synthetic/SyntheticWorld.o \
     $O/world/test/TestWorld.o \
@@ -60,6 +61,7 @@ OBJS = \
     $O/messages/ConvoyControlService_m.o \
     $O/messages/CoopManeuver_m.o \
     $O/messages/DtwinSub_m.o \
+    $O/messages/MemberStatus_m.o \
     $O/messages/ObjectList_m.o \
     $O/packets/MCSPacket_m.o
 
@@ -69,6 +71,7 @@ MSGFILES = \
     messages/ConvoyControlService.msg \
     messages/CoopManeuver.msg \
     messages/DtwinSub.msg \
+    messages/MemberStatus.msg \
     messages/ObjectList.msg \
     packets/MCSPacket.msg
 

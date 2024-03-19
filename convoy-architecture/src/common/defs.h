@@ -48,6 +48,14 @@ struct Convoy {
     double length {0};
 };
 
+struct Subscription {
+    std::string name {std::string("")};
+    int id {0};
+    std::string roi {std::string("")};
+    std::string qos {std::string("")};
+    uint64_t timestamp {0};
+};
+
 } // namespace convoy_architecture
 
 #endif /* COMMON_DEFS_H_ */

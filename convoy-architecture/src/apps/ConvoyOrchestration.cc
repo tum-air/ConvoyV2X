@@ -42,7 +42,7 @@ void ConvoyOrchestration::initialize()
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
     _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
-    _subscriber_store = check_and_cast<SubscriberStore*>(this->getParentModule()->getSubmodule("subscriberStore"));
+    _member_store = check_and_cast<MemberStore*>(this->getParentModule()->getSubmodule("memberStore"));
 
     if(par("stopTime").doubleValue() > start_time)
     {
@@ -90,7 +90,7 @@ void ConvoyOrchestration::estimate_actual_state() {
     if(dtwins != nullptr)
         delete dtwins;
      */
-    const std::vector<Node>& ccs_reports = _subscriber_store->readCCSReports();
+    const std::vector<Node>& ccs_reports = _member_store->readCCSReports();
     std::copy(std::begin(ccs_reports), std::end(ccs_reports), std::back_inserter(_current_state));
 }
 

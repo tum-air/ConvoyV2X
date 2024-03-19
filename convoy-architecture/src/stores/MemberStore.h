@@ -13,43 +13,38 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef __CONVOY_ARCHITECTURE_CONVOYORCHESTRATION_H_
-#define __CONVOY_ARCHITECTURE_CONVOYORCHESTRATION_H_
+#ifndef __CONVOY_ARCHITECTURE_MEMBERSTORE_H_
+#define __CONVOY_ARCHITECTURE_MEMBERSTORE_H_
 
 #include <omnetpp.h>
-#include "stores/DtwinStore.h"
-#include "messages/ObjectList_m.h"
-#include "veins_inet/VeinsInetMobility.h"
-#include "messages/ConvoyControlService_m.h"
 #include "common/defs.h"
-#include "stores/MemberStore.h"
+#include "messages/MemberStatus_m.h"
 
 namespace convoy_architecture {
 
 /**
  * TODO - Generated class
  */
-class ConvoyOrchestration : public omnetpp::cSimpleModule
+class MemberStore : public omnetpp::cSimpleModule
 {
   private:
-    omnetpp::cMessage* _start_event;
-    omnetpp::cMessage* _update_event;
-    DtwinStore* _dtwin_store;
-    MemberStore* _member_store;
-    std::vector<Node> _current_state;
-    std::vector<Node> _desired_state;
-    void estimate_actual_state();
-    void compute_desired_state();
-    void enforce_desired_state();
-
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
+    void checkMemberExpiry();
+    void updateNodeCCSReports(MemberStatus *msg);
+
+    omnetpp::cMessage *_member_expiry_check_event{nullptr};
+    std::vector<Node> _member_ccs_record;
 
   public:
-      ~ConvoyOrchestration();
-      ConvoyOrchestration();
+    ~MemberStore() {
+        if (_member_expiry_check_event != nullptr)
+            cancelAndDelete(_member_expiry_check_event);
+    }
+    const std::vector<Node>& readCCSReports() const;
 };
 
 } // namespace convoy_architecture
+
 
 #endif
