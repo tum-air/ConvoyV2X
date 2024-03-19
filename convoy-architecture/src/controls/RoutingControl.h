@@ -4,6 +4,7 @@
 
 #include <omnetpp.h>
 #include "common/defs.h"
+#include "inet/common/packet/Packet.h"
 #include "packets/TransportPacket_m.h"
 
 namespace convoy_architecture {
@@ -23,9 +24,10 @@ class RoutingControl : public omnetpp::cSimpleModule
     void msgHandlerMemberReport(omnetpp::cMessage *msg);
     void msgHandlerOrchestration(omnetpp::cMessage *msg);
 
-    void forwardToNextHop(omnetpp::cMessage *msg, int destination, MessageType type);
-    void forwardToNetwork(TransportPacket *msg, MessageType type);
-    void forwardToBackend(TransportPacket *msg, MessageType type);
+    void forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type);
+    void forwardToNextHop(inet::Packet *network_packet, MessageType type);
+    void forwardToNetwork(TransportPacket *transport_packet, MessageType type);
+    void forwardToBackend(TransportPacket *transport_packet, MessageType type);
 };
 
 } // namespace convoy_architecture

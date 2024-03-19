@@ -7,6 +7,7 @@
 #include "messages/Orchestration_m.h"
 #include "controls/MembershipControl.h"
 #include "apps/Localizer.h"
+#include "stores/SubscriberStore.h"
 
 namespace convoy_architecture {
 
@@ -37,16 +38,12 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
 
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
-    EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Received subscriber message through gate " << arrival_gate << std::endl;
+    EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlSubscriber") {
-
-        // Message received from upper layer
         if(getParentModule()->hasSubmoduleVector("membershipControl")) {
-
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
-
                 ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
 
                 // Get the dtwin publisher infos
@@ -99,37 +96,65 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
         else
             delete msg;
     }
-    else {
-        // Message received from lower layer
-        // TODO
-    }
+    else
+        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::SUBSCRIPTION);
 }
+
 void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
-    EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher(): " << "Received publisher message through gate " << arrival_gate << std::endl;
+    EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlPublisher") {
-        // Message received from upper layer
-        // check_and_cast<ObjectList *>(msg)
+        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+            MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+            if(membership_control->isInitialized()) {
+                SubscriberStore *store = check_and_cast<SubscriberStore *>(getParentModule()->getSubmodule("subscriberStore"));
+                const std::vector<Subscription>& subscribers = store->readSubscriptions();
+                if(subscribers.size() > 0)
+                {
+                    // Send out the dtwin publications
+                    std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
+                        forwardToNextHop(msg, s.id, MessageType::PUBLICATION);
+                    });
+                }
+                else {
+                    EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher: no known subscribers available, ignoring message" << std::endl;
+                    delete msg;
+                }
+            }
+            else
+                delete msg;
+        }
+        else
+            delete msg;
     }
-    else {
-        // Message received from lower layer
-    }
+    else
+        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::PUBLICATION);
 }
+
 void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
-    EV_INFO << current_time <<" - RoutingControl::msgHandlerManeuver(): " << "Received maneuver message through gate " << arrival_gate << std::endl;
+    EV_INFO << current_time <<" - RoutingControl::msgHandlerManeuver(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlManeuver") {
-        // Message received from upper layer
-        // check_and_cast<CoopManeuver *>(msg)
+        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+            MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+            if(membership_control->isInitialized()) {
+                CoopManeuver *msg_maneuver = check_and_cast<CoopManeuver *>(msg);
+                forwardToNextHop(msg, msg_maneuver->getPartner_address(), MessageType::MANEUVER);
+            }
+            else
+                delete msg;
+        }
+        else
+            delete msg;
     }
-    else {
-        // Message received from lower layer
-    }
+    else
+        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::MANEUVER);
 }
+
 void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
@@ -138,6 +163,7 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
     if(arrival_gate == "inUlMemberReport") {
         // Message received from upper layer
         // check_and_cast<MemberStatus *>(msg)
+        // TODO
     }
     else {
         // Message received from lower layer
@@ -160,7 +186,10 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
     }
 }
 
-void RoutingControl::forwardToNextHop(omnetpp::cMessage *msg, int destination, MessageType type) {
+void RoutingControl::forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type) {
+    //
+}
+void RoutingControl::forwardToNextHop(inet::Packet *network_packet, MessageType type) {
     //
 }
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
