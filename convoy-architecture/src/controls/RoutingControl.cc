@@ -87,8 +87,9 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
 
                 // Send out the subscription requests
                 std::for_each(std::begin(publishers_filtered), std::end(publishers_filtered), [this, msg] (Publication const& p) {
-                    forwardToNextHop(msg, p.id, MessageType::SUBSCRIPTION);
+                    forwardToNextHop(msg->dup(), p.id, MessageType::SUBSCRIPTION);
                 });
+                delete msg;
             }
             else
                 delete msg;
@@ -115,8 +116,9 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                 {
                     // Send out the dtwin publications
                     std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
-                        forwardToNextHop(msg, s.id, MessageType::PUBLICATION);
+                        forwardToNextHop(msg->dup(), s.id, MessageType::PUBLICATION);
                     });
+                    delete msg;
                 }
                 else {
                     EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher: no known subscribers available, ignoring message" << std::endl;
@@ -161,14 +163,53 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
     EV_INFO << current_time <<" - RoutingControl::msgHandlerMemberReport(): " << "Received member status message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlMemberReport") {
-        // Message received from upper layer
-        // check_and_cast<MemberStatus *>(msg)
-        // TODO
+        // Member status report from the upper layer is sent to backend interface if the node is a rsu
+        if(par("stationType").intValue() == StationType::RSU) {
+            TransportPacket *transport_packet = new TransportPacket();
+            MemberStatus *msg_member_status = check_and_cast<MemberStatus *>(msg);
+            transport_packet->setTimestamp(msg_member_status->getTimestamp());
+            transport_packet->setChunkLength(inet::B(par("sizeMemberReportMsg").intValue()));
+            transport_packet->setMsg_member_status(*msg_member_status);
+            forwardToBackend(transport_packet, MessageType::MEMBER_STATUS);
+        }
+        // Else it is sent to the publishers in the same cluster
+        // If there are no publishers in the same cluster, it is sent to all publishers serving the same convoy direction
+        else {
+            MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+            ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
+            int cluster = membership_control->getManagerID();
+            const std::vector<Publication>& publishers = membership_control->readPublishers();
+            std::vector<Publication> publishers_same_direction;
+            std::copy_if(std::begin(publishers), std::end(publishers), std::back_inserter(publishers_same_direction), [direction] (Publication const& p) {
+                return (p.direction == direction);
+            });
+            auto end = std::partition(std::begin(publishers_same_direction), std::end(publishers_same_direction), [cluster] (Publication const& p) {
+                return (p.cluster == cluster);
+            });
+            auto target_publishers_begin = std::begin(publishers_same_direction);
+            auto target_publishers_end = (end == std::begin(publishers_same_direction))? std::end(publishers_same_direction) : end;
+            // Send out the member reports
+            std::for_each(target_publishers_begin, target_publishers_end, [this, msg] (Publication const& p) {
+                forwardToNextHop(msg->dup(), p.id, MessageType::MEMBER_STATUS);
+            });
+            delete msg;
+        }
     }
     else {
-        // Message received from lower layer
+        // Member status report from the lower layer is sent to backend interface if the node is a rsu
+        if(par("stationType").intValue() == StationType::RSU) {
+            // Extract member status transport packet
+            inet::Packet *packet = omnetpp::check_and_cast<inet::Packet *>(msg);
+            auto transport_packet = packet->popAtFront<TransportPacket>();
+            forwardToBackend(transport_packet->dup(), MessageType::MEMBER_STATUS);
+            delete msg;
+        }
+        // Else send it to next hop
+        else
+            forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::MEMBER_STATUS);
     }
 }
+
 void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
     omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string arrival_gate = std::string{msg->getArrivalGate()->getFullName()};
@@ -189,13 +230,17 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
 void RoutingControl::forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type) {
     //
 }
+
 void RoutingControl::forwardToNextHop(inet::Packet *network_packet, MessageType type) {
     //
 }
+
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
     //
 }
+
 void RoutingControl::forwardToBackend(TransportPacket *msg, MessageType type) {
     //
 }
+
 } // namespace convoy_architecture

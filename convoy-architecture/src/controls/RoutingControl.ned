@@ -12,6 +12,15 @@ simple RoutingControl
         int convoyDirection = default(0);
         double roiHorizon @unit(m) = default(1000.0m);
         double roiNearby @unit(m) = default(300.0m);
+        int sizeSubscriberMsg @unit(B)= default(10B);
+        int sizeManeuverMsg @unit(B)= default(20B);
+        int sizeMemberReportMsg @unit(B)= default(10B);
+        int sizeOrchestrationMsg @unit(B)= default(10B);
+        int destPortPublisher = default(21001);
+        int destPortSubscriber = default(21002);
+        int destPortManeuver = default(21003);
+        int destPortMemberReport = default(21004);
+        int destPortOrchestration = default(21005);
         @display("i=block/control");
         @class("convoy_architecture::RoutingControl");
     
