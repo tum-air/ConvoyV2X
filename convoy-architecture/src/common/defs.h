@@ -20,6 +20,7 @@ enum MemberControlState {INITIALIZING, INITIALIZED};
 
 struct Node {
     std::string name{std::string("")};
+    int address {0};
     int id_gnb {0};
     int id_ue {0};
     int id_gnb_gw {0};

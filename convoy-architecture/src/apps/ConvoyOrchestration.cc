@@ -106,6 +106,7 @@ void ConvoyOrchestration::enforce_desired_state() {
     std::for_each(std::begin(_desired_state), std::end(_desired_state), [this] (const Node& n) {
         ConvoyControlService *ccs_msg = new ConvoyControlService();
         ccs_msg->setNode_id(n.name.c_str());
+        ccs_msg->setNode_address(n.address);
         ccs_msg->setTimestamp((uint64_t) omnetpp::simTime().raw());
         send(ccs_msg, "out");
     });

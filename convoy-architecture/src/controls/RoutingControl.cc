@@ -217,13 +217,14 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
 
     if(arrival_gate == "inUlMemberControl") {
         // Message received from upper layer
-        // check_and_cast<Orchestration *>(msg)
+        Orchestration * msg_orchestration = check_and_cast<Orchestration *>(msg);
+        forwardToNextHop(msg, msg_orchestration->getNode_address(), MessageType::ORCHESTRATION);
     }
-    else if(arrival_gate == "inBkndMemberControl") {
-        // Message received from backend
-    }
+    else if(arrival_gate == "inBkndMemberControl")
+        forwardToNetwork(check_and_cast<TransportPacket *>(msg), MessageType::ORCHESTRATION);
     else {
         // Message received from lower layer
+        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
     }
 }
 

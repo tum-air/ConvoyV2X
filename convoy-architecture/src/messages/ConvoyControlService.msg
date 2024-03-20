@@ -18,6 +18,7 @@ namespace convoy_architecture;
 message ConvoyControlService {
     uint64_t timestamp;
     string node_id;
+    int node_address;
     int convoy_role;
     int cluster_role;
     int convoy_id;

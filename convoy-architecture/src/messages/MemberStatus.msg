@@ -7,6 +7,7 @@ namespace convoy_architecture;
 message MemberStatus {
         uint64_t timestamp;
         string ccs_report_name;
+        int ccs_report_address;
         int ccs_report_direction;
         int ccs_report_convoy_id;
         int ccs_report_cluster_id;

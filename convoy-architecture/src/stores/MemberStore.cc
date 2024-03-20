@@ -44,6 +44,7 @@ void MemberStore::updateNodeCCSReports(MemberStatus *msg) {
     // Edit existing entry if the node already exists and if the time stamp is more recent, else create a new entry
     Node member_info {
         std::string{msg->getCcs_report_name()},
+        msg->getCcs_report_address(),
         msg->getCcs_report_id_gnb(),
         msg->getCcs_report_id_ue(),
         msg->getCcs_report_id_gnb_gw(),
