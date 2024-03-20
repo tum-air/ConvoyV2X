@@ -114,11 +114,22 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                 const std::vector<Subscription>& subscribers = store->readSubscriptions();
                 if(subscribers.size() > 0)
                 {
-                    // Send out the dtwin publications
+                    // Send out the dtwin publications to the subcribers
                     std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
                         forwardToNextHop(msg->dup(), s.id, MessageType::PUBLICATION);
                     });
-                    delete msg;
+
+                    // Send out a copy to the backend
+                    if(par("stationType").intValue() == StationType::RSU) {
+                        TransportPacket *transport_packet = new TransportPacket();
+                        ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
+                        transport_packet->setTimestamp(msg_dtwin->getTimestamp());
+                        transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
+                        transport_packet->setMsg_publisher(*msg_dtwin);
+                        forwardToBackend(transport_packet, MessageType::PUBLICATION);
+                    }
+                    else
+                        delete msg;
                 }
                 else {
                     EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher: no known subscribers available, ignoring message" << std::endl;
@@ -229,19 +240,19 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
 }
 
 void RoutingControl::forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type) {
-    //
+    // TODO
 }
 
 void RoutingControl::forwardToNextHop(inet::Packet *network_packet, MessageType type) {
-    //
+    // TODO
 }
 
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
-    //
+    // TODO
 }
 
 void RoutingControl::forwardToBackend(TransportPacket *msg, MessageType type) {
-    //
+    // TODO
 }
 
 } // namespace convoy_architecture
