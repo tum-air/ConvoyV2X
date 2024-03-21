@@ -15,7 +15,7 @@ namespace convoy_architecture {
 enum StationType {VEHICLE,RSU};
 enum ConvoyDirection {UNDEFINED, TOP, DOWN};
 enum Role {MANAGER, MEMBER, GATEWAY};
-enum MessageType {SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
+enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
 enum MemberControlState {INITIALIZING, INITIALIZED};
 
 struct Node {
