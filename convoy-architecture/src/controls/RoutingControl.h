@@ -24,7 +24,6 @@ class RoutingControl : public omnetpp::cSimpleModule
     void msgHandlerMemberReport(omnetpp::cMessage *msg);
     void msgHandlerOrchestration(omnetpp::cMessage *msg);
 
-    void forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type);
     void forwardToNextHop(inet::Packet *network_packet, MessageType type);
     void forwardToNetwork(TransportPacket *transport_packet, MessageType type);
     void forwardToBackend(TransportPacket *transport_packet, MessageType type);

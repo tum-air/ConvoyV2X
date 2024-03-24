@@ -87,7 +87,13 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
 
                 // Send out the subscription requests
                 std::for_each(std::begin(publishers_filtered), std::end(publishers_filtered), [this, msg] (Publication const& p) {
-                    forwardToNextHop(msg->dup(), p.id, MessageType::SUBSCRIPTION);
+                    TransportPacket *transport_packet = new TransportPacket();
+                    DtwinSub *dtwin_sub_msg = check_and_cast<DtwinSub *>(msg->dup());
+                    transport_packet->setTimestamp(dtwin_sub_msg->getTimestamp());
+                    transport_packet->setMsg_subscriber(*dtwin_sub_msg);
+                    transport_packet->setChunkLength(inet::B(par("sizeSubscriberMsg").intValue()));
+                    transport_packet->setDst_mac_id(p.id);
+                    forwardToNetwork(transport_packet, MessageType::SUBSCRIPTION);
                 });
                 delete msg;
             }
@@ -116,7 +122,13 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                 {
                     // Send out the dtwin publications to the subcribers
                     std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
-                        forwardToNextHop(msg->dup(), s.id, MessageType::PUBLICATION);
+                        TransportPacket *transport_packet = new TransportPacket();
+                        ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(msg->dup());
+                        transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
+                        transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
+                        transport_packet->setMsg_publisher(*dtwin_pub_msg);
+                        transport_packet->setDst_mac_id(s.id);
+                        forwardToNetwork(transport_packet, MessageType::PUBLICATION);
                     });
 
                     // Send out a copy to the backend
@@ -155,8 +167,13 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
         if(getParentModule()->hasSubmoduleVector("membershipControl")) {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
-                CoopManeuver *msg_maneuver = check_and_cast<CoopManeuver *>(msg);
-                forwardToNextHop(msg, msg_maneuver->getPartner_address(), MessageType::MANEUVER);
+                TransportPacket *transport_packet = new TransportPacket();
+                CoopManeuver *coop_man_msg = check_and_cast<CoopManeuver *>(msg);
+                transport_packet->setTimestamp(coop_man_msg->getTimestamp());
+                transport_packet->setChunkLength(inet::B(par("sizeManeuverMsg").intValue()));
+                transport_packet->setMsg_maneuver(*coop_man_msg);
+                transport_packet->setDst_mac_id(coop_man_msg->getPartner_address());
+                forwardToNetwork(transport_packet, MessageType::MANEUVER);
             }
             else
                 delete msg;
@@ -201,7 +218,13 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
             auto target_publishers_end = (end == std::begin(publishers_same_direction))? std::end(publishers_same_direction) : end;
             // Send out the member reports
             std::for_each(target_publishers_begin, target_publishers_end, [this, msg] (Publication const& p) {
-                forwardToNextHop(msg->dup(), p.id, MessageType::MEMBER_STATUS);
+                TransportPacket *transport_packet = new TransportPacket();
+                MemberStatus *msg_member_status = check_and_cast<MemberStatus *>(msg->dup());
+                transport_packet->setTimestamp(msg_member_status->getTimestamp());
+                transport_packet->setChunkLength(inet::B(par("sizeMemberReportMsg").intValue()));
+                transport_packet->setMsg_member_status(*msg_member_status);
+                transport_packet->setDst_mac_id(p.id);
+                forwardToNetwork(transport_packet, MessageType::MEMBER_STATUS);
             });
             delete msg;
         }
@@ -228,8 +251,13 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
 
     if(arrival_gate == "inUlMemberControl") {
         // Message received from upper layer
+        TransportPacket *transport_packet = new TransportPacket();
         Orchestration * msg_orchestration = check_and_cast<Orchestration *>(msg);
-        forwardToNextHop(msg, msg_orchestration->getNode_address(), MessageType::ORCHESTRATION);
+        transport_packet->setTimestamp(msg_orchestration->getTimestamp());
+        transport_packet->setChunkLength(inet::B(par("sizeOrchestrationMsg").intValue()));
+        transport_packet->setMsg_orchestration(*msg_orchestration);
+        transport_packet->setDst_mac_id(msg_orchestration->getNode_address());
+        forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
     }
     else if(arrival_gate == "inBkndMemberControl")
         forwardToNetwork(check_and_cast<TransportPacket *>(msg), MessageType::ORCHESTRATION);
@@ -237,63 +265,6 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
         // Message received from lower layer
         forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
     }
-}
-
-void RoutingControl::forwardToNextHop(omnetpp::cMessage *application_message, int destination, MessageType type) {
-    // 1. Prepare transport packet
-    // 2. Assign application packet and set chunk length
-    // 3. Forward to network
-    TransportPacket *transport_packet = new TransportPacket();
-    if (type == MessageType::SUBSCRIPTION) {
-        DtwinSub *dtwin_sub_msg = check_and_cast<DtwinSub *>(application_message);
-        transport_packet->setTimestamp(dtwin_sub_msg->getTimestamp());
-        transport_packet->setMsg_subscriber(*dtwin_sub_msg);
-        transport_packet->setChunkLength(inet::B(par("sizeSubscriberMsg").intValue()));
-    }
-    else if (type == MessageType::PUBLICATION) {
-        ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(application_message);
-        transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
-        transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
-        transport_packet->setMsg_publisher(*dtwin_pub_msg);
-    }
-    else if (type == MessageType::MANEUVER) {
-        CoopManeuver *coop_man_msg = check_and_cast<CoopManeuver *>(application_message);
-        transport_packet->setTimestamp(coop_man_msg->getTimestamp());
-        transport_packet->setChunkLength(inet::B(par("sizeManeuverMsg").intValue()));
-        transport_packet->setMsg_maneuver(*coop_man_msg);
-    }
-    else if (type == MessageType::MEMBER_STATUS) {
-        /* TODO
-        MemberStatus *msg_member_status = check_and_cast<MemberStatus *>(application_message);
-        transport_packet->setTimestamp(msg_member_status->getTimestamp());
-        transport_packet->setChunkLength(inet::B(par("sizeMemberReportMsg").intValue()));
-        transport_packet->setMsg_member_status(*msg_member_status);
-        */
-    }
-    else if (type == MessageType::ORCHESTRATION) {
-        // TODO
-    }
-    else
-        type = MessageType::UNKNOWN;
-
-    if(type == MessageType::UNKNOWN) {
-        delete application_message;
-        delete transport_packet;
-    }
-    else
-        forwardToNetwork(transport_packet, type);
-
-    /*
-     * / Send out a copy to the backend
-                    if(par("stationType").intValue() == StationType::RSU) {
-                        TransportPacket *transport_packet = new TransportPacket();
-                        ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
-                        transport_packet->setTimestamp(msg_dtwin->getTimestamp());
-                        transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
-                        transport_packet->setMsg_publisher(*msg_dtwin);
-                        forwardToBackend(transport_packet, MessageType::PUBLICATION);
-                    }
-     */
 }
 
 void RoutingControl::forwardToNextHop(inet::Packet *network_packet, MessageType type) {

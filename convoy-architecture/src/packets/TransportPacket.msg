@@ -25,5 +25,5 @@ class TransportPacket extends inet::FieldsChunk
     convoy_architecture::ObjectList msg_publisher;
     convoy_architecture::CoopManeuver msg_maneuver;
     convoy_architecture::MemberStatus msg_member_status;
-    convoy_architecture::MemberStatus msg_orchestration;
+    convoy_architecture::Orchestration msg_orchestration;
 }
