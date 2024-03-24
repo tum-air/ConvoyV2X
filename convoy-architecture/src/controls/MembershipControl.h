@@ -19,12 +19,15 @@ private:
     MemberControlState _control_state {MemberControlState::INITIALIZING};
 
     std::vector<Publication> _publishers;
-    int _id_gnb;
+    int _id_gnb {0};
+    int _address_pr {0};
+    int _address_gw {0};
 
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}
     const std::vector<Publication>& readPublishers() const;
     int getManagerID() {return _id_gnb;}
+    bool addressMatch(int address) {return (address==_address_pr || address==_address_gw);}
 };
 
 } // namespace convoy_architecture

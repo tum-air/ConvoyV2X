@@ -12,7 +12,7 @@
 
 namespace convoy_architecture {
 
-enum StationType {VEHICLE,RSU};
+enum StationType {VEHICLE,RSU, BACKEND};
 enum ConvoyDirection {UNDEFINED, TOP, DOWN};
 enum Role {MANAGER, MEMBER, GATEWAY};
 enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};

@@ -104,7 +104,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
             delete msg;
     }
     else
-        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::SUBSCRIPTION);
+        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::SUBSCRIPTION);
 }
 
 void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
@@ -155,7 +155,7 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
             delete msg;
     }
     else
-        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::PUBLICATION);
+        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::PUBLICATION);
 }
 
 void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
@@ -182,7 +182,7 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
             delete msg;
     }
     else
-        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::MANEUVER);
+        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::MANEUVER);
 }
 
 void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
@@ -240,7 +240,7 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
         }
         // Else send it to next hop
         else
-            forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::MEMBER_STATUS);
+            receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::MEMBER_STATUS);
     }
 }
 
@@ -263,12 +263,55 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
         forwardToNetwork(check_and_cast<TransportPacket *>(msg), MessageType::ORCHESTRATION);
     else {
         // Message received from lower layer
-        forwardToNextHop(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
+        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
     }
 }
 
-void RoutingControl::forwardToNextHop(inet::Packet *network_packet, MessageType type) {
-    // TODO
+void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageType type) {
+    // 1. Check if node is of type backend
+    // 2. Forward packet to upper layer if this is the case
+    // 3. Else check if packet is meant for this node
+    // 4. Forward to upper layer if this is the case
+    // 5. Else forward packet back to network for multi-hop routing
+
+    auto transport_packet = network_packet->popAtFront<TransportPacket>();
+    MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+    if(par("stationType").intValue() == StationType::BACKEND) {
+        if(type == MessageType::PUBLICATION) {
+            ObjectList *msg_dtwin = transport_packet->getMsg_publisher().dup();
+            send(msg_dtwin, "outUlSubscriber");
+        }
+        else if(type == MessageType::MEMBER_STATUS) {
+            MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
+            send(msg_member_status, "outUlMemberControl");
+        }
+    }
+    else if(membership_control->addressMatch(transport_packet->getDst_mac_id())) {
+        if(type == MessageType::SUBSCRIPTION) {
+            DtwinSub *msg_subscription = transport_packet->getMsg_subscriber().dup();
+            send(msg_subscription, "outUlPublisher");
+        }
+        else if(type == MessageType::PUBLICATION) {
+            ObjectList *msg_publisher = transport_packet->getMsg_publisher().dup();
+            send(msg_publisher, "outUlSubscriber");
+        }
+        else if(type == MessageType::MANEUVER) {
+            CoopManeuver *msg_maneuver = transport_packet->getMsg_maneuver().dup();
+            send(msg_maneuver, "outUlManeuver");
+        }
+        else if(type == MessageType::MEMBER_STATUS) {
+            MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
+            send(msg_member_status, "outUlMemberControl");
+        }
+        else if(type == MessageType::ORCHESTRATION) {
+            Orchestration *msg_orchestration = transport_packet->getMsg_orchestration().dup();
+            send(msg_orchestration, "outUlMemberControl");
+        }
+    }
+    else {
+        forwardToNetwork(transport_packet->dup(), type);
+    }
+    delete network_packet;
 }
 
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
