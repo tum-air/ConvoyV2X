@@ -9,6 +9,9 @@
 #include "apps/Localizer.h"
 #include "stores/SubscriberStore.h"
 #include "common/binder/Binder.h"
+#include "inet/networklayer/common/L3AddressResolver.h"
+#include "inet/networklayer/common/L3AddressTag_m.h"
+#include "inet/transportlayer/common/L4PortTag_m.h"
 
 namespace convoy_architecture {
 
@@ -19,19 +22,19 @@ void RoutingControl::initialize() {
 }
 
 void RoutingControl::handleMessage(omnetpp::cMessage *msg) {
-    if(msg->arrivedOn("inUlSubscriber") || msg->arrivedOn("inLlSubscriber"))
+    if(msg->arrivedOn("inUlSubscriber") || msg->arrivedOn("inLlSubscriber") || msg->arrivedOn("inLlSubscriberGw"))
         msgHandlerSubscriber(msg);
 
-    else if(msg->arrivedOn("inUlPublisher") || msg->arrivedOn("inLlPublisher"))
+    else if(msg->arrivedOn("inUlPublisher") || msg->arrivedOn("inLlPublisher") || msg->arrivedOn("inLlPublisherGw"))
         msghandlerPublisher(msg);
 
-    else if(msg->arrivedOn("inUlManeuver") || msg->arrivedOn("inLlManeuver"))
+    else if(msg->arrivedOn("inUlManeuver") || msg->arrivedOn("inLlManeuver") || msg->arrivedOn("inLlManeuverGw"))
         msgHandlerManeuver(msg);
 
-    else if(msg->arrivedOn("inUlMemberReport") || msg->arrivedOn("inLlMemberReport"))
+    else if(msg->arrivedOn("inUlMemberReport") || msg->arrivedOn("inLlMemberReport") || msg->arrivedOn("inLlMemberReportGw"))
         msgHandlerMemberReport(msg);
 
-    else if(msg->arrivedOn("inUlMemberControl") || msg->arrivedOn("inLlMemberControl") || msg->arrivedOn("inBkndMemberControl"))
+    else if(msg->arrivedOn("inUlMemberControl") || msg->arrivedOn("inLlMemberControl") || msg->arrivedOn("inLlMemberControlGw") || msg->arrivedOn("inBkndMemberControl"))
         msgHandlerOrchestration(msg);
 }
 
@@ -260,8 +263,17 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
         transport_packet->setDst_mac_id(msg_orchestration->getNode_address());
         forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
     }
-    else if(arrival_gate == "inBkndMemberControl")
-        forwardToNetwork(check_and_cast<TransportPacket *>(msg), MessageType::ORCHESTRATION);
+    else if(arrival_gate == "inBkndMemberControl") {
+        MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+        TransportPacket *transport_packet = check_and_cast<TransportPacket *>(msg);
+        if(membership_control->addressMatch(transport_packet->getDst_mac_id())) {
+            Orchestration *msg_orchestration = transport_packet->getMsg_orchestration().dup();
+            send(msg_orchestration, "outUlMemberControl");
+            delete msg;
+        }
+        else
+            forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
+    }
     else {
         // Message received from lower layer
         receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
@@ -315,36 +327,88 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
     delete network_packet;
 }
 
-void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
+void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, MessageType type) {
     // 1. Find next hop for the transport packet
     // 2. Create new inet packet and transfer to corresponding NIC
 
+    std::string packet_name{""}, dest_port{""}, out_gate{""};
+    int chunk_length{0}, hop_mac_id{0};
+    if(type == MessageType::SUBSCRIPTION) {
+        packet_name = "Subscription";
+        dest_port = "destPortSubscriber";
+        out_gate = "outLlSubscriber";
+        chunk_length = par("sizeSubscriberMsg").intValue();
+    }
+    else if(type == MessageType::PUBLICATION) {
+        packet_name = "Publication";
+        dest_port = "destPortPublisher";
+        out_gate = "outLlPublisher";
+        chunk_length = transport_packet->getMsg_publisher().getObj_byte_size() * transport_packet->getMsg_publisher().getN_objects();
+    }
+    else if(type == MessageType::MANEUVER) {
+        packet_name = "Maneuver";
+        dest_port = "destPortManeuver";
+        out_gate = "outLlManeuver";
+        chunk_length = par("sizeManeuverMsg").intValue();
+    }
+    else if(type == MessageType::MEMBER_STATUS) {
+        packet_name = "MemberReport";
+        dest_port = "destPortMemberReport";
+        out_gate = "outLlMemberReport";
+        chunk_length = par("sizeMemberReportMsg").intValue();
+    }
+    else if(type == MessageType::ORCHESTRATION) {
+        packet_name = "Orchestration";
+        dest_port = "destPortOrchestration";
+        out_gate = "outLlMemberControl";
+        chunk_length = par("sizeOrchestrationMsg").intValue();
+    }
+
     MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    int destination_cluster = (int) binder->getNextHop((MacNodeId) msg->getDst_mac_id());
-    msg->setDst_cluster(destination_cluster);
-
+    int destination_cluster = (int) binder->getNextHop((MacNodeId) transport_packet->getDst_mac_id());
+    transport_packet->setDst_cluster(destination_cluster);
     ClusterDevice target_device = membership_control->clusterMatch(destination_cluster);
     if(target_device == ClusterDevice::MASTER_DEVICE) {
         // the destination node is within the same cluster as this node
         // this cluster is also being managed by this node
         // Use the destination mac id as next hop
+        transport_packet->setHop_cluster(destination_cluster);
+        transport_packet->setHop_mac_id(transport_packet->getDst_mac_id());
     }
     else if(target_device == ClusterDevice::MEMBER_DEVICE) {
         // the destination node is within the same cluster as this node
         // this node is of type member in this cluster
         // Use the mac id of this member's manager as next hop
+        transport_packet->setHop_cluster(destination_cluster);
+        transport_packet->setHop_mac_id(membership_control->getManagerID());
     }
     else if(target_device == ClusterDevice::GATEWAY_DEVICE) {
         // the destination node is within the same cluster as this node
         // this node is of type gateway in this cluster
         // Use the mac id of this gateway's manager as next hop
+        transport_packet->setHop_cluster(destination_cluster);
+        transport_packet->setHop_mac_id(membership_control->getGwManagerID());
     }
     else {
         // There is no direct route to the destination from this node
         // If this node is a master, forward the message to the node having a gateway to the next closest cluster id
         // If not forward the message to either this member's manager or this gateway's manager depending on which cluster id is closest
+
+        // TODO
     }
+
+    // Prepare and send inet Packet
+    hop_mac_id = transport_packet->getHop_mac_id();
+    inet::Packet *packet = new inet::Packet(packet_name.c_str());
+    packet->insertAtBack(inet::makeShared<TransportPacket>(*transport_packet));
+    omnetpp::cModule *destination_module = getSimulation()->getModule(binder->getOmnetId((MacNodeId) hop_mac_id));
+    inet::L3Address destination_address = inet::L3AddressResolver().resolve(destination_module->getFullName());
+    auto addressReq = packet->addTagIfAbsent<inet::L3AddressReq>();
+    addressReq->setDestAddress(destination_address);
+    auto portReq = packet->addTagIfAbsent<inet::L4PortReq>();
+    portReq->setDestPort(par(dest_port.c_str()).intValue());
+    send(packet, out_gate.c_str());
 }
 
 void RoutingControl::forwardToBackend(TransportPacket *transport_packet, MessageType type) {

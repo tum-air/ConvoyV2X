@@ -51,4 +51,16 @@ simple RoutingControl
         output outBkndPublisher;
         output outBkndMemberReport;
         input inBkndMemberControl;
+        
+        // gateway ports
+        output outLlPublisherGw;
+        input inLlPublisherGw;
+        output outLlSubscriberGw;
+        input inLlSubscriberGw;
+        output outLlManeuverGw;
+        input inLlManeuverGw;
+        
+        output outUlMemberControlGw;
+        input inUlMemberControlGw;
+        input inUlMemberReportGw;
 }
