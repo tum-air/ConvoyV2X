@@ -8,6 +8,7 @@
 #include "controls/MembershipControl.h"
 #include "apps/Localizer.h"
 #include "stores/SubscriberStore.h"
+#include "common/binder/Binder.h"
 
 namespace convoy_architecture {
 
@@ -315,11 +316,48 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
 }
 
 void RoutingControl::forwardToNetwork(TransportPacket *msg, MessageType type) {
-    // TODO
+    // 1. Find next hop for the transport packet
+    // 2. Create new inet packet and transfer to corresponding NIC
+
+    MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+    Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+    int destination_cluster = (int) binder->getNextHop((MacNodeId) msg->getDst_mac_id());
+    msg->setDst_cluster(destination_cluster);
+
+    ClusterDevice target_device = membership_control->clusterMatch(destination_cluster);
+    if(target_device == ClusterDevice::MASTER_DEVICE) {
+        // the destination node is within the same cluster as this node
+        // this cluster is also being managed by this node
+        // Use the destination mac id as next hop
+    }
+    else if(target_device == ClusterDevice::MEMBER_DEVICE) {
+        // the destination node is within the same cluster as this node
+        // this node is of type member in this cluster
+        // Use the mac id of this member's manager as next hop
+    }
+    else if(target_device == ClusterDevice::GATEWAY_DEVICE) {
+        // the destination node is within the same cluster as this node
+        // this node is of type gateway in this cluster
+        // Use the mac id of this gateway's manager as next hop
+    }
+    else {
+        // There is no direct route to the destination from this node
+        // If this node is a master, forward the message to the node having a gateway to the next closest cluster id
+        // If not forward the message to either this member's manager or this gateway's manager depending on which cluster id is closest
+    }
 }
 
-void RoutingControl::forwardToBackend(TransportPacket *msg, MessageType type) {
-    // TODO
+void RoutingControl::forwardToBackend(TransportPacket *transport_packet, MessageType type) {
+    if(type == MessageType::PUBLICATION) {
+        ObjectList *msg_publisher = transport_packet->getMsg_publisher().dup();
+        send(msg_publisher, "outBkndPublisher");
+    }
+    else if(type == MessageType::MEMBER_STATUS) {
+        MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
+        send(msg_member_status, "outBkndMemberReport");
+    }
+
+    delete transport_packet;
 }
 
 } // namespace convoy_architecture

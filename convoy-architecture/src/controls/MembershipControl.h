@@ -28,6 +28,7 @@ public:
     const std::vector<Publication>& readPublishers() const;
     int getManagerID() {return _id_gnb;}
     bool addressMatch(int address) {return (address==_address_pr || address==_address_gw);}
+    ClusterDevice clusterMatch(int cluster);
 };
 
 } // namespace convoy_architecture

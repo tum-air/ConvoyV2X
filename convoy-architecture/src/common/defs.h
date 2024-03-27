@@ -17,6 +17,7 @@ enum ConvoyDirection {UNDEFINED, TOP, DOWN};
 enum Role {MANAGER, MEMBER, GATEWAY};
 enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
 enum MemberControlState {INITIALIZING, INITIALIZED};
+enum ClusterDevice {UNKNOWN_DEVICE, MASTER_DEVICE, MEMBER_DEVICE, GATEWAY_DEVICE};
 
 struct Node {
     std::string name{std::string("")};
