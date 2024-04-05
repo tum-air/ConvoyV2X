@@ -392,10 +392,13 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
     }
     else {
         // There is no direct route to the destination from this node
+        // Only single-cluster-hop supported currently
+        delete transport_packet;
+
+        // TODO - future work - multi-cluster-hop
         // If this node is a master, forward the message to the node having a gateway to the next closest cluster id
         // If not forward the message to either this member's manager or this gateway's manager depending on which cluster id is closest
-
-        // TODO
+        // Also use this information for expansion of cluster boundary
     }
 
     // Prepare and send inet Packet
