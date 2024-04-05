@@ -30,7 +30,7 @@ public:
     int getManagerID() {return _id_gnb;}
     int getGwManagerID() {return _id_gnb_gw;}
     bool addressMatch(int address) {return (address==_address_pr || address==_address_gw);}
-    ClusterDevice clusterMatch(int cluster);
+    ClusterDeviceType clusterMatch(int cluster);
 };
 
 } // namespace convoy_architecture

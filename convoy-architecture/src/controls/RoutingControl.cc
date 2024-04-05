@@ -368,22 +368,22 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
     int destination_cluster = (int) binder->getNextHop((MacNodeId) transport_packet->getDst_mac_id());
     transport_packet->setDst_cluster(destination_cluster);
-    ClusterDevice target_device = membership_control->clusterMatch(destination_cluster);
-    if(target_device == ClusterDevice::MASTER_DEVICE) {
+    ClusterDeviceType target_device = membership_control->clusterMatch(destination_cluster);
+    if(target_device == ClusterDeviceType::MASTER_DEVICE) {
         // the destination node is within the same cluster as this node
         // this cluster is also being managed by this node
         // Use the destination mac id as next hop
         transport_packet->setHop_cluster(destination_cluster);
         transport_packet->setHop_mac_id(transport_packet->getDst_mac_id());
     }
-    else if(target_device == ClusterDevice::MEMBER_DEVICE) {
+    else if(target_device == ClusterDeviceType::MEMBER_DEVICE) {
         // the destination node is within the same cluster as this node
         // this node is of type member in this cluster
         // Use the mac id of this member's manager as next hop
         transport_packet->setHop_cluster(destination_cluster);
         transport_packet->setHop_mac_id(membership_control->getManagerID());
     }
-    else if(target_device == ClusterDevice::GATEWAY_DEVICE) {
+    else if(target_device == ClusterDeviceType::GATEWAY_DEVICE) {
         // the destination node is within the same cluster as this node
         // this node is of type gateway in this cluster
         // Use the mac id of this gateway's manager as next hop
