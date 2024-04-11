@@ -48,6 +48,7 @@ OBJS = \
     $O/controls/MembershipControl.o \
     $O/controls/MessagingControl.o \
     $O/controls/RoutingControl.o \
+    $O/devices/ClusterDevice.o \
     $O/interfaces/BackendMessaging.o \
     $O/interfaces/MultipleInputSingleOutput.o \
     $O/nodes/BaseNode.o \

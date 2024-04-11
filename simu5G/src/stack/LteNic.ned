@@ -38,6 +38,10 @@ moduleinterface ICellularNic extends IWirelessInterface
     @display("i=block/ifcard");
     string nodeType @mutable;
         //bool d2dCapable;            // inherit the value from the parent module
+    volatile int convoyID @mutable;
+    volatile bool convoyFull @mutable;
+    volatile bool clusterFull @mutable;
+    volatile int convoyDirection @mutable;
     gates:
         inout EUTRAN_RRC_Sap;   // Control of RRC Layer
         inout x2[] @loose;     // optional x2 manager
