@@ -4,6 +4,7 @@
 
 #include <omnetpp.h>
 #include "common/defs.h"
+#include "devices/ClusterDevice.h"
 
 namespace convoy_architecture {
 
@@ -24,6 +25,15 @@ private:
     int _address_pr {0};
     int _address_gw {0};
 
+    //
+    ClusterDevice* _device_pr {nullptr};
+    ClusterDevice* _device_gw {nullptr};
+    ClusterDeviceType _device_type_pr {ClusterDeviceType::UNKNOWN_DEVICE};
+
+    //
+    void disconnectClusterDevice(ClusterDevice* cluster_device);
+    void removeClusterDevice(ClusterDevice* cluster_device);
+
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}
     const std::vector<Publication>& readPublishers() const;
@@ -31,6 +41,9 @@ public:
     int getGwManagerID() {return _id_gnb_gw;}
     bool addressMatch(int address) {return (address==_address_pr || address==_address_gw);}
     ClusterDeviceType clusterMatch(int cluster);
+
+    //
+    ~MembershipControl();
 };
 
 } // namespace convoy_architecture
