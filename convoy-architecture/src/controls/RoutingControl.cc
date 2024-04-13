@@ -65,7 +65,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                 std::vector<Publication> publishers_filtered;
                 if(!app_localizer->isLocalized()) {
                     // send request to all publishers in the same direction and which are in the same cluster
-                    int cluster = membership_control->getManagerID();
+                    int cluster = membership_control->getAddressOfManagerForPrimaryDevice();
                     std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [cluster] (Publication const& p) {
                         return (p.cluster == cluster);
                     });
@@ -209,7 +209,7 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
         else {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
-            int cluster = membership_control->getManagerID();
+            int cluster = membership_control->getAddressOfManagerForPrimaryDevice();
             const std::vector<Publication>& publishers = membership_control->readPublishers();
             std::vector<Publication> publishers_same_direction;
             std::copy_if(std::begin(publishers), std::end(publishers), std::back_inserter(publishers_same_direction), [direction] (Publication const& p) {
@@ -266,7 +266,8 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
     else if(arrival_gate == "inBkndMemberControl") {
         MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
         TransportPacket *transport_packet = check_and_cast<TransportPacket *>(msg);
-        if(membership_control->addressMatch(transport_packet->getDst_mac_id())) {
+        int destination_address = transport_packet->getDst_mac_id();
+        if(membership_control->addressMatchesPrimaryDevice(destination_address) || membership_control->addressMatchesGatewayDevice(destination_address)) {
             Orchestration *msg_orchestration = transport_packet->getMsg_orchestration().dup();
             send(msg_orchestration, "outUlMemberControl");
             delete msg;
@@ -288,6 +289,7 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
     // 5. Else forward packet back to network for multi-hop routing
 
     auto transport_packet = network_packet->popAtFront<TransportPacket>();
+    int destination_address = transport_packet->getDst_mac_id();
     MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
     if(par("stationType").intValue() == StationType::BACKEND) {
         if(type == MessageType::PUBLICATION) {
@@ -299,7 +301,7 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
             send(msg_member_status, "outUlMemberControl");
         }
     }
-    else if(membership_control->addressMatch(transport_packet->getDst_mac_id())) {
+    else if(membership_control->addressMatchesPrimaryDevice(destination_address) || membership_control->addressMatchesGatewayDevice(destination_address)) {
         if(type == MessageType::SUBSCRIPTION) {
             DtwinSub *msg_subscription = transport_packet->getMsg_subscriber().dup();
             send(msg_subscription, "outUlPublisher");
@@ -381,14 +383,14 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
         // this node is of type member in this cluster
         // Use the mac id of this member's manager as next hop
         transport_packet->setHop_cluster(destination_cluster);
-        transport_packet->setHop_mac_id(membership_control->getManagerID());
+        transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForPrimaryDevice());
     }
     else if(target_device == ClusterDeviceType::GATEWAY_DEVICE) {
         // the destination node is within the same cluster as this node
         // this node is of type gateway in this cluster
         // Use the mac id of this gateway's manager as next hop
         transport_packet->setHop_cluster(destination_cluster);
-        transport_packet->setHop_mac_id(membership_control->getGwManagerID());
+        transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForGatewayDevice());
     }
     else {
         // There is no direct route to the destination from this node

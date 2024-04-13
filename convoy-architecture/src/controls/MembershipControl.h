@@ -11,36 +11,30 @@ namespace convoy_architecture {
 /**
  * TODO - Generated class
  */
-class MembershipControl : public omnetpp::cSimpleModule
+class MembershipControl : public omnetpp::cSimpleModule, public omnetpp::cListener
 {
 private:
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
+    ClusterDevice* createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
+    void setLocation(ClusterDevice* device, ClusterDeviceType type);
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
-
     std::vector<Publication> _publishers;
-    int _id_gnb {0};
-    int _id_gnb_gw {0};
-    int _address_pr {0};
-    int _address_gw {0};
 
     //
     ClusterDevice* _device_pr {nullptr};
     ClusterDevice* _device_gw {nullptr};
-    ClusterDeviceType _device_type_pr {ClusterDeviceType::UNKNOWN_DEVICE};
-
-    //
-    void disconnectClusterDevice(ClusterDevice* cluster_device);
-    void removeClusterDevice(ClusterDevice* cluster_device);
 
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}
     const std::vector<Publication>& readPublishers() const;
-    int getManagerID() {return _id_gnb;}
-    int getGwManagerID() {return _id_gnb_gw;}
-    bool addressMatch(int address) {return (address==_address_pr || address==_address_gw);}
-    ClusterDeviceType clusterMatch(int cluster);
+    int getAddressOfManagerForPrimaryDevice() {return (_device_pr == nullptr)? 0 : _device_pr->getAddressOfManager();}
+    int getAddressOfManagerForGatewayDevice() {return (_device_gw == nullptr)? 0 : _device_gw->getAddressOfManager();}
+    bool addressMatchesPrimaryDevice(int address) {return (_device_pr == nullptr)? false : (address==_device_pr->getAddress());}
+    bool addressMatchesGatewayDevice(int address) {return (_device_gw == nullptr)? false : (address==_device_gw->getAddress());}
+    ClusterDeviceType clusterMatch(int cluster_address);
+    void receiveSignal(omnetpp::cComponent *source, omnetpp::simsignal_t signalID, omnetpp::cObject *obj, omnetpp::cObject *) override;
 
     //
     ~MembershipControl();

@@ -21,7 +21,7 @@ module ClusterDevice
         @networkNode();
         @display("bgb=700,600;b=1,1,rect,red,red");
         @class("convoy_architecture::ClusterDevice");
-        string deviceType = default("primary");
+        bool isPrimary = default(true);
         bool isMaster = default(true);
         
         string nicType = default("NRNicEnb");
