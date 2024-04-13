@@ -154,4 +154,5 @@ class UserControlInfo extends LteControlInfo {
     double publisherNodeY[] = 0;
     double publisherFOV[] = 0;
     int publisherDirection[] = 0;
+    string publisherName[]=0;
 }

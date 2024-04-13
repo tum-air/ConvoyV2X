@@ -31,18 +31,23 @@ void ClusterDevice::remove() {
         deleteModule();
 
     // Inform binder if the primary device is a master
-    if(_type == ClusterDeviceType::MASTER_DEVICE) {
+    if(_device_type == ClusterDeviceType::MASTER_DEVICE) {
         Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
         binder->deNotifyCluster(_address_manager);
     }
 }
 
-void ClusterDevice::configureAndStartAs(ClusterDeviceType device_type, DeviceInterfaceType interface_type) {
+void ClusterDevice::setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type){
+    _device_type = device_type;
+    _interface_type = interface_type;
+}
+
+void ClusterDevice::configureAndStart() {
     // Finalize device configuration
-    if(interface_type != DeviceInterfaceType::PRIMARY_INTERFACE) {
+    if(_interface_type != DeviceInterfaceType::PRIMARY_INTERFACE) {
         par("isPrimary") = false;
     }
-    if(device_type != ClusterDeviceType::MASTER_DEVICE) {
+    if(_device_type != ClusterDeviceType::MASTER_DEVICE) {
         par("isMaster") = false;
         par("nicType") = "NRNicUe";
         par("nodeType") = "UE";

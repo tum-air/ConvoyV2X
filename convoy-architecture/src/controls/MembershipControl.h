@@ -17,14 +17,16 @@ private:
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
     ClusterDevice* createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
-    void setLocation(ClusterDevice* device, ClusterDeviceType type);
+    void updateLocation(ClusterDevice* device);
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
+    std::vector<Broadcast> _broadcasts_received;
     std::vector<Publication> _publishers;
 
     //
     ClusterDevice* _device_pr {nullptr};
     ClusterDevice* _device_gw {nullptr};
+    omnetpp::cMessage* _event_scan_broadcast;
 
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}

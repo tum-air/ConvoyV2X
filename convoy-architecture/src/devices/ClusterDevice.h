@@ -15,17 +15,19 @@ class ClusterDevice : public omnetpp::cSimpleModule
   private:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;
-    ClusterDeviceType _type {ClusterDeviceType::UNKNOWN_DEVICE};
+    ClusterDeviceType _device_type {ClusterDeviceType::UNKNOWN_DEVICE};
+    DeviceInterfaceType _interface_type {DeviceInterfaceType::UNKNOWN_INTERFACE};
     int _address {0};
     int _address_manager {0};
 
   public:
-    ClusterDeviceType getType() {return _type;}
+    ClusterDeviceType getDeviceType() {return _device_type;}
     int getAddress() {return _address;}
     int getAddressOfManager() {return _address_manager;}
     void disconnect();
     void remove();
-    void configureAndStartAs(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
+    void setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
+    void configureAndStart();
 };
 
 } // namespace convoy_architecture

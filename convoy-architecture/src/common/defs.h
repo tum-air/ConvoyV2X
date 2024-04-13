@@ -70,6 +70,15 @@ struct Publication {
     int cluster;
 };
 
+struct Broadcast {
+    int id_convoy {0};
+    int id_cluster {0};
+    bool full_convoy {false};
+    bool full_cluster {false};
+    ConvoyDirection direction {ConvoyDirection::UNDEFINED};
+    double rssi {0.0};
+};
+
 } // namespace convoy_architecture
 
 #endif /* COMMON_DEFS_H_ */

@@ -2,10 +2,28 @@
 #include "MembershipControl.h"
 #include "nodes/BaseNode.h"
 #include "stack/phy/layer/NRPhyUe.h"
+#include "common/binder/Binder.h"
 
 namespace convoy_architecture {
 
 Define_Module(MembershipControl);
+
+MembershipControl::~MembershipControl()
+{
+    /* TODO
+    cancelAndDelete(_outstanding_scheduled_messages);
+    */
+
+    // Disconnect and remove associated cluster devices
+    if (_device_pr != nullptr) {
+        _device_pr->disconnect();
+        _device_pr->remove();
+    }
+    if (_device_gw != nullptr) {
+        _device_gw->disconnect();
+        _device_gw->remove();
+    }
+}
 
 void MembershipControl::initialize()
 {
@@ -16,7 +34,12 @@ void MembershipControl::initialize()
     // and initiate its role as a member for broadcast reception
     _device_pr = createInitClusterDevice(ClusterDeviceType::MEMBER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE);
 
-    // TODO
+    // Setup primary device to periodically scan for broadcast messages
+    _event_scan_broadcast = new omnetpp::cMessage("EventScanBroadcast");
+    double scan_duration = par("broadcastScanDuration").doubleValue();
+    double scan_interval = par("broadcastScanInterval").doubleValue();
+    scan_duration = (scan_duration < scan_interval)? (3.0 * scan_interval) : scan_duration;
+    scheduleAfter(scan_duration, _event_scan_broadcast);
 }
 
 ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type) {
@@ -39,12 +62,13 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
     // Create new cluster device module
     omnetpp::cModuleType *module_type = omnetpp::cModuleType::get("convoy_architecture.devices.ClusterDevice");
     ClusterDevice* device = check_and_cast<ClusterDevice*>(module_type->create(device_name.c_str(), getSystemModule(), device_index));
+    device->setType(device_type, interface_type);
 
     // Initialize mobility
-    setLocation(device, device_type);
+    updateLocation(device);
 
     // Configure and start device
-    device->configureAndStartAs(device_type, interface_type);
+    device->configureAndStart();
 
     // register to get a notification when broadcast messages arrive
     if(device_type != ClusterDeviceType::MASTER_DEVICE) {
@@ -55,11 +79,11 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
     return device;
 }
 
-void MembershipControl::setLocation(ClusterDevice* device, ClusterDeviceType type)
+void MembershipControl::updateLocation(ClusterDevice* device)
 {
     double offset_x, offset_y;
     std::string color = "red";
-    switch (type)
+    switch (device->getDeviceType())
     {
     case ClusterDeviceType::MASTER_DEVICE:
         offset_x = 0.0;
@@ -103,34 +127,61 @@ const std::vector<Publication>& MembershipControl::readPublishers() const
 ClusterDeviceType MembershipControl::clusterMatch(int cluster_address) {
     if(_device_pr != nullptr) {
         if(cluster_address == _device_pr->getAddressOfManager())
-            return _device_pr->getType();
+            return _device_pr->getDeviceType();
     }
     if(_device_gw != nullptr) {
         if(cluster_address == _device_gw->getAddressOfManager())
-            return _device_gw->getType();
+            return _device_gw->getDeviceType();
     }
     return(ClusterDeviceType::UNKNOWN_DEVICE);
 }
 
 void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::simsignal_t signalID, omnetpp::cObject *obj, omnetpp::cObject *)
 {
-    // TODO
-}
-
-MembershipControl::~MembershipControl()
-{
-    /* TODO
-    cancelAndDelete(_outstanding_scheduled_messages);
-    */
-
-    // Disconnect and remove associated cluster devices
-    if (_device_pr != nullptr) {
-        _device_pr->disconnect();
-        _device_pr->remove();
+    if (signalID == inet::IMobility::mobilityStateChangedSignal) {
+        inet::IMobility *base_mobility = check_and_cast<inet::IMobility*>(obj);
+        if(_device_pr != nullptr)
+            updateLocation(_device_pr);
+        if(_device_gw != nullptr)
+            updateLocation(_device_gw);
     }
-    if (_device_gw != nullptr) {
-        _device_gw->disconnect();
-        _device_gw->remove();
+    else if (signalID == LtePhyBase::clusterBroadcastReceivedSignal)
+    {
+        ClusterBroadcastNotification *notification = check_and_cast<ClusterBroadcastNotification*>(obj);
+        UserControlInfo *msg = notification->_cluster_broadcast_message;
+
+        Broadcast broadcast {
+                    msg->getConvoyID(),
+                    msg->getClusterID(),
+                    msg->getConvoyFull(),
+                    msg->getClusterFull(),
+                    (ConvoyDirection) msg->getConvoyDirection(),
+                    msg->getRssi()
+        };
+        _broadcasts_received.push_back(broadcast);
+
+        // Update publisher details if received signal strength is above threshold
+        if(msg->getRssi() >= par("minRSSIClusterManager").doubleValue()) {
+            Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+            for(int i=0; i<msg->getPublisherNodeIDArraySize(); i++) {
+                Publication publisher {
+                            std::string(msg->getPublisherName(i)),
+                            msg->getPublisherNodeID(i),
+                            inet::Coord{msg->getPublisherNodeX(i), msg->getPublisherNodeY(i), 0.0},
+                            msg->getPublisherFOV(i),
+                            (ConvoyDirection) msg->getConvoyDirection(),
+                            binder->getNextHop(msg->getPublisherNodeID(i))
+                };
+
+                // Replace existing entry if the publisher already exists , else create a new entry
+                std::string publisher_name = publisher.name;
+                auto it = std::find_if(std::begin(_publishers), std::end(_publishers), [&publisher_name] (Publication const& val) {return val.name == publisher_name;});
+                if(it != std::end(_publishers))
+                    (*it) = publisher;
+                else
+                    _publishers.push_back(publisher);
+            }
+        }
     }
 }
 
