@@ -28,6 +28,8 @@
 #include "stack/phy/ChannelModel/LteChannelModel.h"
 #include "stack/phy/feedback/LteFeedbackComputationRealistic.h"
 
+#include "common/ConvoyArchitectureDefs.h"
+
 /**
  * @class LtePhy
  * @brief Physical layer of Lte Nic.
@@ -323,6 +325,8 @@ class LtePhyBase : public ChannelAccess
      * Utility function to create a broadcast message for convoy control.
      */
     LteAirFrame *createConvoyControlMessage();
+    // NEW
+    LteAirFrame *createConvoyBroadcastMessage();
 
     /**
      * Returns the pointer to the AMC module, given a master ID (ENODEB)
@@ -362,6 +366,9 @@ class LtePhyBase : public ChannelAccess
     std::vector<double> _publisher_y;
     std::vector<double> _publisher_fov;
     std::vector<int> _publisher_direction;
+    // NEW
+    lte::Broadcast _broadcast_for_transmission;
+    std::vector<lte::Publication> _publishers_for_transmission;
   public:
     static simsignal_t clusterBroadcastReceivedSignal;
     void setClusterBroadcastParameters(  MacNodeId convoy_id,
@@ -374,6 +381,8 @@ class LtePhyBase : public ChannelAccess
                                         const std::vector<double> &publisher_y,
                                         const std::vector<double> &publisher_fov,
                                         const std::vector<int> &publisher_direction);
+    // NEW
+    void updateBroadcastParameters(const lte::Broadcast &broadcast, const std::vector<lte::Publication> &publishers);
     void setTxPower(double tx_power);
 };
 

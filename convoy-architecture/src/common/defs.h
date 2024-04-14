@@ -9,11 +9,12 @@
 #define COMMON_DEFS_H_
 
 #include "veins_inet/VeinsInetMobility.h"
+#include "common/ConvoyArchitectureDefs.h"
 
 namespace convoy_architecture {
 
 enum StationType {VEHICLE,RSU, BACKEND};
-enum ConvoyDirection {UNDEFINED, TOP, DOWN};
+typedef lte::ConvoyDirection ConvoyDirection;
 enum Role {MANAGER, MEMBER, GATEWAY};
 enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
 enum MemberControlState {INITIALIZING, INITIALIZED};
@@ -61,23 +62,9 @@ struct Subscription {
     uint64_t timestamp {0};
 };
 
-struct Publication {
-    std::string name {std::string("")};
-    int id {0};
-    inet::Coord position {0.0, 0.0, 0.0};
-    double fov {0.0};
-    ConvoyDirection direction {ConvoyDirection::UNDEFINED};
-    int cluster;
-};
+typedef lte::Publication Publication;
 
-struct Broadcast {
-    int id_convoy {0};
-    int id_cluster {0};
-    bool full_convoy {false};
-    bool full_cluster {false};
-    ConvoyDirection direction {ConvoyDirection::UNDEFINED};
-    double rssi {0.0};
-};
+typedef lte::Broadcast Broadcast;
 
 } // namespace convoy_architecture
 

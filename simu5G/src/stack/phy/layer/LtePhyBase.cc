@@ -343,6 +343,13 @@ void LtePhyBase::setClusterBroadcastParameters( const std::vector<MacNodeId> &pu
     std::copy(publisher_direction.begin(), publisher_direction.end(), _publisher_direction.begin());
 }
 
+// NEW
+void LtePhyBase::updateBroadcastParameters(const lte::Broadcast &broadcast, const std::vector<lte::Publication> &publishers) {
+    _publishers_for_transmission.resize(publishers.size());
+    std::copy(std::begin(publishers), std::end(publishers), std::begin(_publishers_for_transmission));
+    _broadcast_for_transmission = broadcast;
+}
+
 LteAirFrame *LtePhyBase::createConvoyControlMessage()
 {
     // broadcast airframe
@@ -370,6 +377,44 @@ LteAirFrame *LtePhyBase::createConvoyControlMessage()
         cInfo->appendPublisherFOV(_publisher_fov.at(i));
         cInfo->appendPublisherDirection(_publisher_direction.at(i));
     }
+
+    convCtrlAirFrame->setControlInfo(cInfo);
+    convCtrlAirFrame->setDuration(0);
+    convCtrlAirFrame->setSchedulingPriority(airFramePriority_);
+    // current position
+    cInfo->setCoord(getRadioPosition());
+
+    return convCtrlAirFrame;
+}
+
+// NEW
+LteAirFrame *LtePhyBase::createConvoyBroadcastMessage()
+{
+    // broadcast airframe
+    LteAirFrame *convCtrlAirFrame = new LteAirFrame("clusterBroadcast");
+    UserControlInfo *cInfo = new UserControlInfo();
+    cInfo->setIsBroadcast(true);
+    cInfo->setIsCorruptible(false);
+    cInfo->setSourceId(nodeId_);
+    cInfo->setFrameType(BROADCASTPKT);
+    cInfo->setTxPower(txPower_);
+    cInfo->setCarrierFrequency(primaryChannelModel_->getCarrierFrequency());
+    cInfo->setIsNr(isNr_);
+
+    // set convoy control info
+    cInfo->setConvoyID(_broadcast_for_transmission.id_convoy);
+    cInfo->setClusterID(_broadcast_for_transmission.id_cluster);
+    cInfo->setConvoyFull(_broadcast_for_transmission.full_convoy);
+    cInfo->setClusterFull(_broadcast_for_transmission.full_cluster);
+    cInfo->setConvoyDirection((int) _broadcast_for_transmission.direction);
+    std::for_each(std::begin(_publishers_for_transmission), std::end(_publishers_for_transmission), [cInfo] (lte::Publication const& publisher) {
+        cInfo->appendPublisherName(publisher.name.c_str());
+        cInfo->appendPublisherNodeID(publisher.id);
+        cInfo->appendPublisherNodeX(publisher.position.x);
+        cInfo->appendPublisherNodeY(publisher.position.y);
+        cInfo->appendPublisherFOV(publisher.fov);
+        cInfo->appendPublisherDirection((int) publisher.direction);
+    });
 
     convCtrlAirFrame->setControlInfo(cInfo);
     convCtrlAirFrame->setDuration(0);

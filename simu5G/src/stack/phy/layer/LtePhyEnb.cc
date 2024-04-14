@@ -122,7 +122,7 @@ void LtePhyEnb::handleSelfMessage(cMessage *msg)
     else if (msg->isName("convoyCtrlBroadcastStarter"))
     {
         // send convoy control broadcast message
-        LteAirFrame *f = createConvoyControlMessage();
+        LteAirFrame *f = createConvoyBroadcastMessage();
         sendBroadcast(f);
         scheduleAt(NOW + convoyCtrlBroadcastInterval_, msg);
     }
