@@ -45,14 +45,16 @@ module ClusterDevice
         
     gates:
         input radioIn @directIn;
-        input fromAppDtwinPub;
-        output toAppDtwinPub;
-        input fromAppDtwinSub;
-        output toAppDtwinSub;
-        input fromAppCoopMan;
-        output toAppCoopMan;
-        input fromAppConvCtl;
-        output toAppConvCtl;
+        input fromAppPublisher;
+        output toAppPublisher;
+        input fromAppSubscriber;
+        output toAppSubscriber;
+        input fromAppManeuver;
+        output toAppManeuver;
+        input fromAppMemberControl;
+        output toAppMemberControl;
+        input fromAppMemberReport;
+        output toAppMemberReport;
         
     submodules:
         interfaceTable: InterfaceTable {
@@ -94,25 +96,30 @@ module ClusterDevice
             parameters:
                 @display("p=350,150;b=200,5,,,,1");
         }
-        ioAppDtwinSub: UdpSocketIo {
-                @display("p=140,75;is=s");
+        ioAppSubscriber: UdpSocketIo {
+                @display("p=100,125;is=s");
                 localPort = 21001;
                 destPort = 21002;
         }
-        ioAppDtwinPub: UdpSocketIo {
-                @display("p=280,75;is=s");
+        ioAppPublisher: UdpSocketIo {
+                @display("p=100,50;is=s");
                 localPort = 21002;
                 destPort = 21001;
         }
-        ioAppCoopMan: UdpSocketIo {
-                @display("p=420,75;is=s");
+        ioAppManeuver: UdpSocketIo {
+                @display("p=350,50;is=s");
                 localPort = 21003;
                 destPort = 21003;
         }
-        ioAppConvCtl: UdpSocketIo {
-                @display("p=560,75;is=s");
-                localPort = 41000;
-                destPort = 41000;
+        ioAppMemberControl: UdpSocketIo {
+                @display("p=600,125;is=s");
+                localPort = 21004;
+                destPort = 21004;
+        }
+        ioAppMemberReport: UdpSocketIo {
+                @display("p=600,50;is=s");
+                localPort = 21005;
+                destPort = 21005;
         }
         
     connections allowunconnected:
@@ -134,21 +141,25 @@ module ClusterDevice
         // application layer
         dispatcher_al.out++ --> udp.appIn;
         dispatcher_al.in++ <-- udp.appOut;
-        ioAppDtwinSub.socketOut --> dispatcher_al.in++;
-        ioAppDtwinPub.socketOut --> dispatcher_al.in++;
-        ioAppCoopMan.socketOut --> dispatcher_al.in++;
-        ioAppConvCtl.socketOut --> dispatcher_al.in++;
-        ioAppDtwinSub.socketIn <-- dispatcher_al.out++;
-        ioAppDtwinPub.socketIn <-- dispatcher_al.out++;
-        ioAppCoopMan.socketIn <-- dispatcher_al.out++;
-        ioAppConvCtl.socketIn <-- dispatcher_al.out++;
+        ioAppSubscriber.socketOut --> dispatcher_al.in++;
+        ioAppPublisher.socketOut --> dispatcher_al.in++;
+        ioAppManeuver.socketOut --> dispatcher_al.in++;
+        ioAppMemberControl.socketOut --> dispatcher_al.in++;
+        ioAppMemberReport.socketOut --> dispatcher_al.in++;
+        ioAppSubscriber.socketIn <-- dispatcher_al.out++;
+        ioAppPublisher.socketIn <-- dispatcher_al.out++;
+        ioAppManeuver.socketIn <-- dispatcher_al.out++;
+        ioAppMemberControl.socketIn <-- dispatcher_al.out++;
+        ioAppMemberReport.socketIn <-- dispatcher_al.out++;
         
-        ioAppDtwinSub.trafficOut --> toAppDtwinSub;
-        ioAppDtwinPub.trafficOut --> toAppDtwinPub;
-        ioAppCoopMan.trafficOut --> toAppCoopMan;
-        ioAppConvCtl.trafficOut --> toAppConvCtl;
-        fromAppDtwinSub --> ioAppDtwinSub.trafficIn;
-        fromAppDtwinPub --> ioAppDtwinPub.trafficIn;
-        fromAppCoopMan --> ioAppCoopMan.trafficIn;
-        fromAppConvCtl --> ioAppConvCtl.trafficIn;
+        ioAppSubscriber.trafficOut --> toAppSubscriber;
+        ioAppPublisher.trafficOut --> toAppPublisher;
+        ioAppManeuver.trafficOut --> toAppManeuver;
+        ioAppMemberControl.trafficOut --> toAppMemberControl;
+        ioAppMemberReport.trafficOut --> toAppMemberReport;
+        fromAppSubscriber --> ioAppSubscriber.trafficIn;
+        fromAppPublisher --> ioAppPublisher.trafficIn;
+        fromAppManeuver --> ioAppManeuver.trafficIn;
+        fromAppMemberControl --> ioAppMemberControl.trafficIn;
+        fromAppMemberReport --> ioAppMemberReport.trafficIn;
 }

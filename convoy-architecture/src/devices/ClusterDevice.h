@@ -31,6 +31,8 @@ class ClusterDevice : public omnetpp::cSimpleModule
     void configureAndStart(int direction, int address_convoy = 0);
     void updateBroadcastInfo(const Broadcast &broadcast);
     void updateBroadcastInfo(const std::vector<Publication> &publishers);
+    void connectPrimaryDeviceTo(omnetpp::cModule *base_node);
+    void connectGatewayDeviceTo(omnetpp::cModule *base_node);
 };
 
 } // namespace convoy_architecture

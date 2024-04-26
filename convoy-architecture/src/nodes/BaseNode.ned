@@ -54,6 +54,18 @@ module BaseNode
         output outLlMemberReport;
         input inLlMemberReport;
         
+        output outLlPublisherGw;
+        input inLlPublisherGw;
+        output outLlSubscriberGw;
+        input inLlSubscriberGw;
+        output outLlManeuverGw;
+        input inLlManeuverGw;
+        
+        output outLlMemberControlGw;
+        input inLlMemberControlGw;
+        output outLlMemberReportGw;
+        input inLlMemberReportGw;
+        
         output outBkndPublisher;
         output outBkndMemberReport;
         input inBkndMemberControl;
@@ -125,6 +137,18 @@ module BaseNode
         routingControl.inLlMemberControl <-- inLlMemberControl;
         routingControl.outLlMemberReport --> outLlMemberReport;
         routingControl.inLlMemberReport <-- inLlMemberReport;
+        
+        routingControl.outLlSubscriberGw --> outLlSubscriberGw;
+        routingControl.inLlSubscriberGw <-- inLlSubscriberGw;
+        routingControl.outLlPublisherGw --> outLlPublisherGw;
+        routingControl.inLlPublisherGw <-- inLlPublisherGw;
+        routingControl.outLlManeuverGw --> outLlManeuverGw;
+        routingControl.inLlManeuverGw <-- inLlManeuverGw;
+        
+        routingControl.outLlMemberControlGw --> outLlMemberControlGw;
+        routingControl.inLlMemberControlGw <-- inLlMemberControlGw;
+        routingControl.outLlMemberReportGw --> outLlMemberReportGw;
+        routingControl.inLlMemberReportGw <-- inLlMemberReportGw;
         
         routingControl.outBkndPublisher --> outBkndPublisher;
         routingControl.outBkndMemberReport --> outBkndMemberReport;

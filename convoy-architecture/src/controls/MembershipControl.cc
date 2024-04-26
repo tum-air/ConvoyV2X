@@ -48,12 +48,12 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
     std::string device_name ="unknown";
     int device_index = 0;
 
-    if(device_type == ClusterDeviceType::MEMBER_DEVICE) {
+    if(device_type == ClusterDeviceType::MEMBER_DEVICE)
         device_name = "member";
-    }
-    else if(device_type == ClusterDeviceType::MASTER_DEVICE) {
+    else if(device_type == ClusterDeviceType::MASTER_DEVICE)
         device_name = "master";
-    }
+    else
+        device_name = "gateway";
 
     // Create submodule vector first, if it doesn't already exist
     if(!getSystemModule()->hasSubmoduleVector(device_name.c_str()))
@@ -74,6 +74,12 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
 
     // Configure and start device
     device->configureAndStart(par("convoyDirection").intValue(), id_convoy);
+
+    // Connect device to base node
+    if(device_type == ClusterDeviceType::GATEWAY_DEVICE)
+        device->connectGatewayDeviceTo(getParentModule());
+    else
+        device->connectPrimaryDeviceTo(getParentModule());
 
     // register to get a notification when broadcast messages arrive
     if(device_type != ClusterDeviceType::MASTER_DEVICE) {
@@ -133,10 +139,51 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
 void MembershipControl::handleBroadcastScanEvent() {
     // Check for arrival of broadcast messages
     if(_broadcasts_received.size() > 0) {
-        //
+        // Extract broadcasts from those clusters which are moving in the same direction
+        // and whose signal strengths are greater than minRSSI
+        ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
+        double min_rssi = par("minRSSIClusterManager").doubleValue();
+        std::vector<Broadcast> qualified_broadcasts {};
+        std::copy_if(std::begin(_broadcasts_received), std::end(_broadcasts_received), std::back_inserter(qualified_broadcasts),
+                [&direction, &min_rssi] (Broadcast const& broadcast) {
+            return (broadcast.direction == direction) && (broadcast.rssi >= min_rssi);
+        });
+
+        if(qualified_broadcasts.size() > 0)
+        {
+            // Sort the qualified in descending order of received signal strength
+            std::sort(std::begin(qualified_broadcasts), std::end(qualified_broadcasts),
+                    [] (Broadcast const& lhs, Broadcast const& rhs) {
+                return lhs.rssi < rhs.rssi;
+            });
+
+            // Iterate through the sorted list starting with the max rssi candidate
+            bool joined_existing_convoy = false;
+            for(auto candidate : qualified_broadcasts) {
+                if(!candidate.full_convoy) {
+                    if(!candidate.full_cluster) {
+                        joinNewCluster(candidate.id_convoy, candidate.id_cluster, DeviceInterfaceType::PRIMARY_INTERFACE);
+                    }
+                    else {
+                        createNewCluster(candidate.id_convoy);
+                    }
+                    joined_existing_convoy = true;
+                    break;
+                }
+            }
+            if(!joined_existing_convoy)
+                createNewConvoy();
+        }
+        else
+            createNewConvoy();
     }
     else
         createNewConvoy();
+
+    _control_state = MemberControlState::INITIALIZED;
+
+    // TODO - Setup events for next operational states - periodically update publisher info, trigger member report messages
+    // TODO - handle incoming convoy orchestration messages
 }
 
 void MembershipControl::createNewConvoy() {
@@ -159,7 +206,9 @@ void MembershipControl::createNewCluster(int id_convoy) {
 
     // Update publisher list in cluster device for broadcast
     updatePublishers();
+}
 
+void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type) {
     /*
      * CONTINUE HERE
      */

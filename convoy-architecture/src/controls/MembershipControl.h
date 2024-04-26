@@ -21,6 +21,7 @@ private:
     void handleBroadcastScanEvent();
     void createNewConvoy();
     void createNewCluster(int id_convoy);
+    void joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type);
     void updatePublishers();
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};

@@ -99,5 +99,38 @@ void ClusterDevice::updateBroadcastInfo(const std::vector<Publication> &publishe
     }
 }
 
+void ClusterDevice::connectPrimaryDeviceTo(omnetpp::cModule *base_node) {
+    base_node->gate("outLlPublisher")->connectTo(gate("fromAppPublisher"));
+    gate("toAppPublisher")->connectTo(base_node->gate("inLlPublisher"));
+
+    base_node->gate("outLlSubscriber")->connectTo(gate("fromAppSubscriber"));
+    gate("toAppSubscriber")->connectTo(base_node->gate("inLlSubscriber"));
+
+    base_node->gate("outLlManeuver")->connectTo(gate("fromAppManeuver"));
+    gate("toAppManeuver")->connectTo(base_node->gate("inLlManeuver"));
+
+    base_node->gate("outLlMemberControl")->connectTo(gate("fromAppMemberControl"));
+    gate("toAppMemberControl")->connectTo(base_node->gate("inLlMemberControl"));
+
+    base_node->gate("outLlMemberReport")->connectTo(gate("fromAppMemberReport"));
+    gate("toAppMemberReport")->connectTo(base_node->gate("inLlMemberReport"));
+}
+
+void ClusterDevice::connectGatewayDeviceTo(omnetpp::cModule *base_node) {
+    base_node->gate("outLlPublisherGw")->connectTo(gate("fromAppPublisher"));
+    gate("toAppPublisher")->connectTo(base_node->gate("inLlPublisherGw"));
+
+    base_node->gate("outLlSubscriberGw")->connectTo(gate("fromAppSubscriber"));
+    gate("toAppSubscriber")->connectTo(base_node->gate("inLlSubscriberGw"));
+
+    base_node->gate("outLlManeuverGw")->connectTo(gate("fromAppManeuver"));
+    gate("toAppManeuver")->connectTo(base_node->gate("inLlManeuverGw"));
+
+    base_node->gate("outLlMemberControlGw")->connectTo(gate("fromAppMemberControl"));
+    gate("toAppMemberControl")->connectTo(base_node->gate("inLlMemberControlGw"));
+
+    base_node->gate("outLlMemberReportGw")->connectTo(gate("fromAppMemberReport"));
+    gate("toAppMemberReport")->connectTo(base_node->gate("inLlMemberReportGw"));
+}
 
 } // namespace convoy_architecture

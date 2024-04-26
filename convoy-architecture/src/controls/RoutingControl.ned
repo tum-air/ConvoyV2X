@@ -60,7 +60,8 @@ simple RoutingControl
         output outLlManeuverGw;
         input inLlManeuverGw;
         
-        output outUlMemberControlGw;
-        input inUlMemberControlGw;
-        input inUlMemberReportGw;
+        output outLlMemberControlGw;
+        input inLlMemberControlGw;
+        output outLlMemberReportGw;
+        input inLlMemberReportGw;
 }
