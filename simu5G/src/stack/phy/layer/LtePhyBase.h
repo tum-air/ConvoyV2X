@@ -382,7 +382,8 @@ class LtePhyBase : public ChannelAccess
                                         const std::vector<double> &publisher_fov,
                                         const std::vector<int> &publisher_direction);
     // NEW
-    void updateBroadcastParameters(const lte::Broadcast &broadcast, const std::vector<lte::Publication> &publishers);
+    void updateBroadcastParameters(const lte::Broadcast &broadcast);
+    void updateBroadcastParameters(const std::vector<lte::Publication> &publishers);
     void setTxPower(double tx_power);
 };
 

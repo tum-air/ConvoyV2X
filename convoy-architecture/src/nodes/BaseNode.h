@@ -18,6 +18,7 @@
 
 #include <omnetpp.h>
 #include "veins_inet/VeinsInetMobility.h"
+#include "common/defs.h"
 
 namespace convoy_architecture {
 
@@ -32,6 +33,7 @@ class BaseNode : public omnetpp::cSimpleModule
 
   public:
     inet::Coord getCurrentLocation();
+    StationType getStationType();
 };
 
 } // namespace convoy_architecture

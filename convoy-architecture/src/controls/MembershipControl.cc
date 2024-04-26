@@ -44,7 +44,7 @@ void MembershipControl::initialize()
     scheduleAfter(scan_duration, _event_scan_broadcast);
 }
 
-ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type) {
+ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type, int id_convoy) {
     std::string device_name ="unknown";
     int device_index = 0;
 
@@ -73,7 +73,7 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
     updateLocation(device);
 
     // Configure and start device
-    device->configureAndStart();
+    device->configureAndStart(par("convoyDirection").intValue(), id_convoy);
 
     // register to get a notification when broadcast messages arrive
     if(device_type != ClusterDeviceType::MASTER_DEVICE) {
@@ -143,7 +143,7 @@ void MembershipControl::createNewConvoy() {
     // Create and notify a new convoy
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
     int id_convoy{binder->getMaxIdConvoy()};
-    binder->notifyConvoy(id_convoy++);
+    binder->registerConvoy(id_convoy++);
     createNewCluster(id_convoy);
 }
 
@@ -152,41 +152,40 @@ void MembershipControl::createNewCluster(int id_convoy) {
     // But first clear up old device info if any
     _device_pr->disconnect();
     _device_pr->remove();
-    _device_pr = createInitClusterDevice(ClusterDeviceType::MASTER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE);
+    _device_pr = createInitClusterDevice(ClusterDeviceType::MASTER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE, id_convoy);
 
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+    binder->registerCluster(id_convoy, _device_pr->getAddressOfManager());
+
+    // Update publisher list in cluster device for broadcast
+    updatePublishers();
+
     /*
      * CONTINUE HERE
-     * binder->notifyCluster(id_convoy, cluster_id, _manager_id);
      */
+}
 
+void MembershipControl::updatePublishers()
+{
+    // If the parent module is of station type RSU, include the cluster device corresponding to the parent node in the publisher list
+    BaseNode* base_node = check_and_cast<BaseNode*>(getParentModule());
+    if(base_node->getStationType() == StationType::RSU)
+    {
+        Publication publisher {
+                    std::string(base_node->getFullName()),
+                    _device_pr->getAddress(),
+                    base_node->getCurrentLocation(),
+                    base_node->par("detectorFovLimitRange").doubleValue(),
+                    (ConvoyDirection) par("convoyDirection").intValue(),
+                    _device_pr->getAddressOfManager()
+        };
 
-    /*
-     * _cluster_id = cluster_id;
-
-    // Remove existing cluster manager if present
-    removeExistingClusterManager();
-
-    // Create and initialize new cluster manager
-    _cluster_role = Role::MANAGER;
-    createNewClusterManager();
-
-    // Notify binder
-    Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    binder->notifyCluster(_convoy_id, cluster_id, _manager_id);
-
-    // Set cluster control broadcast parameters
-    setClusterBroadcastParameters();
-
-    // Change cluster broadcast subscription
-    LtePhyEnbD2D *manager_phy = check_and_cast<LtePhyEnbD2D *>(_manager_module->getSubmodule("cellularNic")->getSubmodule("phy"));
-    NRPhyUe *member_phy = check_and_cast<NRPhyUe *>(_member_module->getSubmodule("cellularNic")->getSubmodule("nrPhy"));
-    if(member_phy->isSubscribed(LtePhyBase::clusterBroadcastReceivedSignal, this))
-        member_phy->unsubscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
-    if(!manager_phy->isSubscribed(LtePhyBase::clusterBroadcastReceivedSignal, this))
-        manager_phy->subscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
-     *
-     */
+        auto it = std::find_if(std::begin(_publishers), std::end(_publishers), [&publisher] (Publication const& val) {return val.name == publisher.name;});
+        if(it != std::end(_publishers))
+            (*it) = publisher;
+        else
+            _publishers.push_back(publisher);
+    }
 }
 
 const std::vector<Publication>& MembershipControl::readPublishers() const
@@ -228,7 +227,12 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
                     (ConvoyDirection) msg->getConvoyDirection(),
                     msg->getRssi()
         };
-        _broadcasts_received.push_back(broadcast);
+        // Replace existing entry if the cluster already exists , else create a new entry
+        auto itr = std::find_if(std::begin(_broadcasts_received), std::end(_broadcasts_received), [&broadcast] (Broadcast const& val) {return val.id_cluster == broadcast.id_cluster;});
+        if(itr != std::end(_broadcasts_received))
+            (*itr) = broadcast;
+        else
+            _broadcasts_received.push_back(broadcast);
 
         // Update publisher details if received signal strength is above threshold
         if(msg->getRssi() >= par("minRSSIClusterManager").doubleValue()) {

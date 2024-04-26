@@ -344,10 +344,12 @@ void LtePhyBase::setClusterBroadcastParameters( const std::vector<MacNodeId> &pu
 }
 
 // NEW
-void LtePhyBase::updateBroadcastParameters(const lte::Broadcast &broadcast, const std::vector<lte::Publication> &publishers) {
+void LtePhyBase::updateBroadcastParameters(const lte::Broadcast &broadcast) {
+    _broadcast_for_transmission = broadcast;
+}
+void LtePhyBase::updateBroadcastParameters(const std::vector<lte::Publication> &publishers) {
     _publishers_for_transmission.resize(publishers.size());
     std::copy(std::begin(publishers), std::end(publishers), std::begin(_publishers_for_transmission));
-    _broadcast_for_transmission = broadcast;
 }
 
 LteAirFrame *LtePhyBase::createConvoyControlMessage()

@@ -21,4 +21,8 @@ inet::Coord BaseNode::getCurrentLocation()
     return(mobility_module->getCurrentPosition());
 }
 
+StationType BaseNode::getStationType()
+{
+    return((StationType) par("stationType").intValue());
+}
 } // namespace convoy_architecture

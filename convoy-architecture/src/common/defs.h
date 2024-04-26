@@ -13,7 +13,7 @@
 
 namespace convoy_architecture {
 
-enum StationType {VEHICLE,RSU, BACKEND};
+enum StationType {VEHICLE, RSU, BACKEND};
 typedef lte::ConvoyDirection ConvoyDirection;
 enum Role {MANAGER, MEMBER, GATEWAY};
 enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};

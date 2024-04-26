@@ -19,6 +19,7 @@ class ClusterDevice : public omnetpp::cSimpleModule
     DeviceInterfaceType _interface_type {DeviceInterfaceType::UNKNOWN_INTERFACE};
     int _address {0};
     int _address_manager {0};
+    int _address_convoy {0};
 
   public:
     ClusterDeviceType getDeviceType() {return _device_type;}
@@ -27,7 +28,9 @@ class ClusterDevice : public omnetpp::cSimpleModule
     void disconnect();
     void remove();
     void setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
-    void configureAndStart();
+    void configureAndStart(int direction, int address_convoy = 0);
+    void updateBroadcastInfo(const Broadcast &broadcast);
+    void updateBroadcastInfo(const std::vector<Publication> &publishers);
 };
 
 } // namespace convoy_architecture

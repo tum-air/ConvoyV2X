@@ -16,11 +16,12 @@ class MembershipControl : public omnetpp::cSimpleModule, public omnetpp::cListen
 private:
     void initialize() override;
     void handleMessage(omnetpp::cMessage *msg) override;
-    ClusterDevice* createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
+    ClusterDevice* createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type, int id_convoy = 0);
     void updateLocation(ClusterDevice* device);
     void handleBroadcastScanEvent();
     void createNewConvoy();
     void createNewCluster(int id_convoy);
+    void updatePublishers();
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
     std::vector<Broadcast> _broadcasts_received{};

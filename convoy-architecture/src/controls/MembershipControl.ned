@@ -12,4 +12,5 @@ simple MembershipControl
         double broadcastScanDuration @unit(s) = default(3s);
         double broadcastScanInterval @unit(s) = default(1s);
         double minRSSIClusterManager @mutable = default(0.0);
+        int convoyDirection = default(0);
 }
