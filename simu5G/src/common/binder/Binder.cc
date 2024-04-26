@@ -1417,3 +1417,26 @@ int Binder::getClusterId(int convoy_id, MacNodeId cluster_manager)
 
     return (cluster_id);
 }
+
+// new
+void Binder::registerConvoy(int id_convoy) {
+    // Add to list if new, also initialize cluster map if not done already
+    auto element = std::find (_id_list_convoys.begin(), _id_list_convoys.end(), id_convoy);
+    if (element == _id_list_convoys.end()) {
+        _id_list_convoys.push_back(id_convoy);
+        _cluster_map.insert(std::make_pair(id_convoy, std::vector<MacNodeId>{}));
+    }
+}
+void Binder::deRegisterConvoy(int id_convoy) {
+    _id_list_convoys.erase(std::remove(_id_list_convoys.begin(), _id_list_convoys.end(), id_convoy), _id_list_convoys.end());
+}
+void Binder::registerCluster(int id_convoy, int id_cluster) {
+    auto element = std::find (_cluster_map[id_convoy].begin(), _cluster_map[id_convoy].end(), id_cluster);
+    if (element == _cluster_map[id_convoy].end())
+        _cluster_map[id_convoy].push_back((MacNodeId) id_cluster);
+}
+void Binder::deRegisterCluster(int id_convoy, int id_cluster) {
+    auto element = std::find (_cluster_map[id_convoy].begin(), _cluster_map[id_convoy].end(), id_cluster);
+    if (element != _cluster_map[id_convoy].end())
+        _cluster_map[id_convoy].erase(std::remove(_cluster_map[id_convoy].begin(), _cluster_map[id_convoy].end(), id_cluster), _cluster_map[id_convoy].end());
+}

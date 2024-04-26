@@ -27,14 +27,15 @@ void ClusterDevice::disconnect() {
 }
 
 void ClusterDevice::remove() {
-    if(isModule())
-        deleteModule();
-
     // Inform binder if the primary device is a master
     if(_device_type == ClusterDeviceType::MASTER_DEVICE) {
         Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
         binder->deNotifyCluster(_address_manager);
     }
+
+    if(isModule())
+            deleteModule();
+
 }
 
 void ClusterDevice::setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type){

@@ -145,6 +145,8 @@ class Binder : public omnetpp::cSimpleModule
      */
     std::vector<int> _id_list_convoys;
     std::map<int, std::vector<MacNodeId>> _cluster_map;
+    // new
+    std::map<int, std::vector<int>> _device_map;
 
   protected:
     virtual void initialize(int stages) override;
@@ -645,6 +647,11 @@ class Binder : public omnetpp::cSimpleModule
     void deNotifyCluster(MacNodeId cluster_manager);
     MacNodeId getManagerId(int convoy_id, int cluster_id);
     int getClusterId(int convoy_id, MacNodeId cluster_manager);
+    // new
+    void registerConvoy(int id_convoy);
+    void deRegisterConvoy(int id_convoy);
+    void registerCluster(int id_convoy, int id_cluster);
+    void deRegisterCluster(int id_convoy, int id_cluster);
 };
 
 #endif

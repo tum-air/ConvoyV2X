@@ -18,10 +18,13 @@ private:
     void handleMessage(omnetpp::cMessage *msg) override;
     ClusterDevice* createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
     void updateLocation(ClusterDevice* device);
+    void handleBroadcastScanEvent();
+    void createNewConvoy();
+    void createNewCluster(int id_convoy);
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
-    std::vector<Broadcast> _broadcasts_received;
-    std::vector<Publication> _publishers;
+    std::vector<Broadcast> _broadcasts_received{};
+    std::vector<Publication> _publishers{};
 
     //
     ClusterDevice* _device_pr {nullptr};
