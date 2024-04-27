@@ -385,6 +385,7 @@ class LtePhyBase : public ChannelAccess
     void updateBroadcastParameters(const lte::Broadcast &broadcast);
     void updateBroadcastParameters(const std::vector<lte::Publication> &publishers);
     void setTxPower(double tx_power);
+    double getTxPower();
 };
 
 class ClusterBroadcastNotification : public omnetpp::cObject, omnetpp::noncopyable

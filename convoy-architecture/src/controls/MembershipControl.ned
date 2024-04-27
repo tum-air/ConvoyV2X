@@ -13,4 +13,10 @@ simple MembershipControl
         double broadcastScanInterval @unit(s) = default(1s);
         double minRSSIClusterManager @mutable = default(0.0);
         int convoyDirection = default(0);
+        double publisherUpdateInterval @unit(s) = default(0.1s);
+        double memberReportStartTime @unit(s) = default(75.000s);
+        double memberReportUpdateRate @unit(s) = default(1s);
+    gates:
+        input in;
+        output out;
 }

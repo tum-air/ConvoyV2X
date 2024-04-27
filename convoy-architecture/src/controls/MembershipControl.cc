@@ -4,6 +4,7 @@
 #include "stack/phy/layer/NRPhyUe.h"
 #include "stack/phy/layer/LtePhyEnbD2D.h"
 #include "common/binder/Binder.h"
+#include "messages/MemberStatus_m.h"
 
 namespace convoy_architecture {
 
@@ -12,6 +13,8 @@ Define_Module(MembershipControl);
 MembershipControl::~MembershipControl()
 {
     cancelAndDelete(_event_scan_broadcast);
+    cancelAndDelete(_event_publisher_update);
+    cancelAndDelete(_event_member_report);
     /* TODO
     cancelAndDelete(_outstanding_scheduled_messages);
     */
@@ -131,12 +134,23 @@ void MembershipControl::updateLocation(ClusterDevice* device)
 
 void MembershipControl::handleMessage(omnetpp::cMessage *msg)
 {
-    std::string event{msg->getName()};
-    if(event == std::string{"EventScanBroadcast"})
-        handleBroadcastScanEvent();
+    if(msg->isSelfMessage()) {
+        std::string event{msg->getName()};
+        if(event == std::string{"EventScanBroadcast"})
+            handleBroadcastScanEvent();
+        else if((event == std::string{"EventPublisherUpdate"}) && (_device_pr->getDeviceType() == ClusterDeviceType::MASTER_DEVICE)) {
+            updatePublishers();
+            scheduleAfter(par("publisherUpdateInterval").doubleValue(), _event_publisher_update);
+        }
+        else if(event == std::string{"EventMemberReport"}) {
+            sendMemberReport();
+            scheduleAfter(par("memberReportUpdateRate").doubleValue(), _event_member_report);
+        }
 
-    // TODO - Setup events for next operational states - periodically update publisher info, trigger member report messages
-    // TODO - handle incoming convoy orchestration messages
+    }
+    else {
+        // TODO - handle incoming convoy orchestration messages
+    }
 
 }
 
@@ -184,7 +198,13 @@ void MembershipControl::handleBroadcastScanEvent() {
     else
         createNewConvoy();
 
-    _control_state = MemberControlState::INITIALIZED;
+    _event_publisher_update = new omnetpp::cMessage("EventPublisherUpdate");
+    scheduleAfter(par("publisherUpdateInterval").doubleValue(), _event_publisher_update);
+    _event_member_report = new omnetpp::cMessage("EventMemberReport");
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+    double start_time = par("memberReportStartTime").doubleValue();
+    omnetpp::simtime_t trigger_time = (current_time < start_time)? start_time : current_time;
+    scheduleAt(trigger_time, _event_member_report);
 }
 
 void MembershipControl::createNewConvoy() {
@@ -207,13 +227,33 @@ void MembershipControl::createNewCluster(int id_convoy) {
 
     // Update publisher list in cluster device for broadcast
     updatePublishers();
+
+    _role = Role::MANAGER;
+    _control_state = MemberControlState::INITIALIZED;
 }
 
 void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type, double rssi) {
-    if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE)
+    if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE) {
         _device_gw->joinNewCluster(id_convoy, id_cluster, rssi);
-    else
+        _role = Role::GATEWAY;
+    }
+    else {
         _device_pr->joinNewCluster(id_convoy, id_cluster, rssi);
+        _role = (_role == Role::GATEWAY)? Role::GATEWAY : Role::MEMBER;
+        _control_state = MemberControlState::INITIALIZED;
+    }
+}
+
+void MembershipControl::detachFromCluster(DeviceInterfaceType interface_type) {
+    if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE) {
+        _device_gw->detachFromCluster();
+        _role = Role::MEMBER;
+    }
+    else {
+        _device_pr->detachFromCluster();
+        _role = Role::UNDEFINED;
+        _control_state = MemberControlState::INITIALIZING;
+    }
 }
 
 void MembershipControl::updatePublishers()
@@ -237,6 +277,29 @@ void MembershipControl::updatePublishers()
         else
             _publishers.push_back(publisher);
     }
+    _device_pr->updateBroadcastInfo(_publishers);
+}
+
+void MembershipControl::sendMemberReport()
+{
+    BaseNode* base_node = check_and_cast<BaseNode*>(getParentModule());
+    inet::Coord location = base_node->getCurrentLocation();
+    MemberStatus *msg = new MemberStatus("MemberReport");
+    msg->setTimestamp((uint64_t )omnetpp::simTime().raw());
+    msg->setCcs_report_name(getParentModule()->getFullName());
+    msg->setCcs_report_direction(par("convoyDirection").intValue());
+    msg->setCcs_report_id_convoy(_device_pr->getAddressOfConvoy());
+    msg->setCcs_report_id_gnb(_device_pr->getAddressOfManager());
+    msg->setCcs_report_id_ue(_device_pr->getAddress());
+    msg->setCcs_report_id_gnb(_device_gw->getAddressOfManager());
+    msg->setCcs_report_id_ue(_device_gw->getAddress());
+    msg->setCcs_report_role((int)_role);
+    msg->setCcs_report_position_x(location.x);
+    msg->setCcs_report_position_y(location.y);
+    msg->setCcs_report_position_z(location.z);
+    msg->setCcs_report_txp(_device_pr->getTxp());
+    msg->setCcs_report_txp_gw(_device_gw->getTxp());
+    send(msg, "out");
 }
 
 const std::vector<Publication>& MembershipControl::readPublishers() const

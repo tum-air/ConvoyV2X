@@ -22,7 +22,9 @@ private:
     void createNewConvoy();
     void createNewCluster(int id_convoy);
     void joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type, double rssi);
+    void detachFromCluster(DeviceInterfaceType interface_type);
     void updatePublishers();
+    void sendMemberReport();
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
     std::vector<Broadcast> _broadcasts_received{};
@@ -32,6 +34,9 @@ private:
     ClusterDevice* _device_pr {nullptr};
     ClusterDevice* _device_gw {nullptr};
     omnetpp::cMessage* _event_scan_broadcast;
+    omnetpp::cMessage* _event_publisher_update;
+    omnetpp::cMessage* _event_member_report;
+    Role _role {Role::UNDEFINED};
 
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}

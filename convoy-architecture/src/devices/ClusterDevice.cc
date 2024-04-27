@@ -135,14 +135,49 @@ void ClusterDevice::connectGatewayDeviceTo(omnetpp::cModule *base_node) {
 }
 
 void ClusterDevice::joinNewCluster(int id_convoy, int id_cluster, double rssi) {
-    NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
-    nic->attachToCluster(id_cluster, rssi);
+    if(_device_type != ClusterDeviceType::MASTER_DEVICE) {
+        NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+        nic->attachToCluster(id_cluster, rssi);
 
-    // Use macNodeId assigned by binder as device address
-    Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    _address = par("macNodeId").intValue();
-    _address_manager = binder->getNextHop(_address);
-    _address_convoy = id_convoy;
+        // Use macNodeId assigned by binder as device address
+        Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+        _address = par("macNodeId").intValue();
+        _address_manager = binder->getNextHop(_address);
+        _address_convoy = id_convoy;
+    }
+}
+
+void ClusterDevice::detachFromCluster() {
+    // TODO detach mechanism
+    // TODO also inform binder
+    _address = 0;
+    _address_manager = 0;
+    _address_convoy = 0;
+}
+
+void ClusterDevice::setTxp(double txp) {
+    if(_device_type == ClusterDeviceType::MASTER_DEVICE) {
+        LtePhyEnbD2D *nic = check_and_cast<LtePhyEnbD2D *>(getSubmodule("cellularNic")->getSubmodule("phy"));
+        nic->setTxPower(txp);
+    }
+    else {
+        NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+        nic->setTxPower(txp);
+    }
+}
+
+double ClusterDevice::getTxp() {
+    double txp;
+    if(_device_type == ClusterDeviceType::MASTER_DEVICE) {
+        LtePhyEnbD2D *nic = check_and_cast<LtePhyEnbD2D *>(getSubmodule("cellularNic")->getSubmodule("phy"));
+        txp = nic->getTxPower();
+    }
+    else {
+        NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+        txp = nic->getTxPower();
+    }
+
+    return txp;
 }
 
 } // namespace convoy_architecture

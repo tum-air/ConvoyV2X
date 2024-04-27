@@ -15,7 +15,7 @@ namespace convoy_architecture {
 
 enum StationType {VEHICLE, RSU, BACKEND};
 typedef lte::ConvoyDirection ConvoyDirection;
-enum Role {MANAGER, MEMBER, GATEWAY};
+enum Role {UNDEFINED, MANAGER, MEMBER, GATEWAY};
 enum MessageType {UNKNOWN, SUBSCRIPTION, PUBLICATION, MANEUVER, MEMBER_STATUS, ORCHESTRATION};
 enum MemberControlState {INITIALIZING, INITIALIZED};
 enum ClusterDeviceType {UNKNOWN_DEVICE, MASTER_DEVICE, MEMBER_DEVICE, GATEWAY_DEVICE};

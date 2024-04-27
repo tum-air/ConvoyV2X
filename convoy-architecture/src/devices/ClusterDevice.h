@@ -25,6 +25,7 @@ class ClusterDevice : public omnetpp::cSimpleModule
     ClusterDeviceType getDeviceType() {return _device_type;}
     int getAddress() {return _address;}
     int getAddressOfManager() {return _address_manager;}
+    int getAddressOfConvoy() {return _address_convoy;}
     void disconnect();
     void remove();
     void setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type);
@@ -34,6 +35,9 @@ class ClusterDevice : public omnetpp::cSimpleModule
     void connectPrimaryDeviceTo(omnetpp::cModule *base_node);
     void connectGatewayDeviceTo(omnetpp::cModule *base_node);
     void joinNewCluster(int id_convoy, int id_cluster, double rssi);
+    void detachFromCluster();
+    void setTxp(double txp);
+    double getTxp();
 };
 
 } // namespace convoy_architecture

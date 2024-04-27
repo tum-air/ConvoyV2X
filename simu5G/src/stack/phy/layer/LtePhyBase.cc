@@ -431,3 +431,8 @@ void LtePhyBase::setTxPower(double tx_power)
 {
     txPower_ = tx_power;
 }
+double LtePhyBase::getTxPower()
+{
+    return txPower_;
+}
+
