@@ -35,9 +35,10 @@ void MembershipControl::initialize()
     // register to get a notification when position changes
     getParentModule()->subscribe(inet::IMobility::mobilityStateChangedSignal, this);
 
-    // Create primary cluster device
-    // and initiate its role as a member for broadcast reception
+    // Create primary and gateway cluster devices
+    // and initiate for broadcast reception
     _device_pr = createInitClusterDevice(ClusterDeviceType::MEMBER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE);
+    _device_gw = createInitClusterDevice(ClusterDeviceType::GATEWAY_DEVICE, DeviceInterfaceType::GATEWAY_INTERFACE);
 
     // Setup primary device to periodically scan for broadcast messages
     _event_scan_broadcast = new omnetpp::cMessage("EventScanBroadcast");
@@ -134,8 +135,8 @@ void MembershipControl::updateLocation(ClusterDevice* device)
 
 void MembershipControl::handleMessage(omnetpp::cMessage *msg)
 {
+    std::string event{msg->getName()};
     if(msg->isSelfMessage()) {
-        std::string event{msg->getName()};
         if(event == std::string{"EventScanBroadcast"})
             handleBroadcastScanEvent();
         else if((event == std::string{"EventPublisherUpdate"}) && (_device_pr->getDeviceType() == ClusterDeviceType::MASTER_DEVICE)) {
@@ -148,8 +149,10 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
         }
 
     }
-    else {
-        // TODO - handle incoming convoy orchestration messages
+    else if(msg->arrivedOn("in")) {
+        if(event == std::string{"ConvoyOrchestration"}) {
+            handleOrchestrationMessage(check_and_cast<ConvoyControlService *>(msg));
+        }
     }
 
 }
@@ -246,10 +249,12 @@ void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInte
 
 void MembershipControl::detachFromCluster(DeviceInterfaceType interface_type) {
     if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE) {
+        if(_device_gw->isModule() && (_device_gw->getAddressOfManager() != 0))
         _device_gw->detachFromCluster();
         _role = Role::MEMBER;
     }
     else {
+        if(_device_pr->isModule() && (_device_pr->getAddressOfManager() != 0))
         _device_pr->detachFromCluster();
         _role = Role::UNDEFINED;
         _control_state = MemberControlState::INITIALIZING;
@@ -373,4 +378,63 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
     }
 }
 
+void MembershipControl::handleOrchestrationMessage(ConvoyControlService *msg) {
+    double txp = msg->getTx_power();
+    double txp_gw = msg->getTx_power_gw();
+    Role role = (Role) msg->getCluster_role();
+    int id_convoy = msg->getConvoy_id();
+    int id_cluster = msg->getCluster_id();
+    int id_cluster_gw = msg->getCluster_id_gw();
+
+    // Enforce role and membership changes if required
+    if(id_convoy != _device_pr->getAddressOfConvoy()) {
+        // changing to new convoy
+        _device_pr->detachFromCluster();
+        _device_gw->detachFromCluster();
+        Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+        if(id_convoy > binder->getMaxIdConvoy())
+            createNewConvoy();
+        changeClusterMembership(role, id_convoy, id_cluster, id_cluster_gw);
+    }
+    else if(role != _role) {
+        _device_pr->detachFromCluster();
+        _device_gw->detachFromCluster();
+        changeClusterMembership(role, id_convoy, id_cluster, id_cluster_gw);
+    }
+    else if((id_cluster != _device_pr->getAddressOfManager()) || (id_cluster_gw != _device_gw->getAddressOfManager()))
+        changeClusterMembership(role, id_convoy, id_cluster, id_cluster_gw);
+
+    // Enforce txp limitations
+    if(_device_pr->isModule())
+        _device_pr->setTxp(txp);
+    if(_device_gw->isModule())
+        _device_gw->setTxp(txp_gw);
+}
+
+void MembershipControl::changeClusterMembership(Role role, int id_convoy, int id_cluster, int id_cluster_gw) {
+    Role previous_role {_role};
+    if(role == Role::MANAGER)
+        createNewCluster(id_convoy);
+    else {
+        if(role == Role::GATEWAY) {
+            double rssi{0.0};
+            auto itr = std::find_if(std::begin(_broadcasts_received), std::end(_broadcasts_received), [&id_cluster_gw] (Broadcast const& val) {return val.id_cluster == id_cluster_gw;});
+            if(itr != std::end(_broadcasts_received))
+                rssi = (*itr).rssi;
+            joinNewCluster(id_convoy, id_cluster_gw, DeviceInterfaceType::GATEWAY_INTERFACE, rssi);
+        }
+        if(role == Role::MEMBER || role == Role::GATEWAY) {
+            if(previous_role == Role::MANAGER) {
+                _device_pr->disconnect();
+                _device_pr->remove();
+                _device_pr = createInitClusterDevice(ClusterDeviceType::MEMBER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE, id_convoy);
+            }
+            double rssi{0.0};
+            auto itr = std::find_if(std::begin(_broadcasts_received), std::end(_broadcasts_received), [&id_cluster] (Broadcast const& val) {return val.id_cluster == id_cluster;});
+            if(itr != std::end(_broadcasts_received))
+                rssi = (*itr).rssi;
+            joinNewCluster(id_convoy, id_cluster, DeviceInterfaceType::PRIMARY_INTERFACE, rssi);
+        }
+    }
+}
 } // namespace convoy_architecture

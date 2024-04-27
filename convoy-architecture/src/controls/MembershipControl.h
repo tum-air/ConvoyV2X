@@ -5,6 +5,7 @@
 #include <omnetpp.h>
 #include "common/defs.h"
 #include "devices/ClusterDevice.h"
+#include "messages/ConvoyControlService_m.h"
 
 namespace convoy_architecture {
 
@@ -21,10 +22,12 @@ private:
     void handleBroadcastScanEvent();
     void createNewConvoy();
     void createNewCluster(int id_convoy);
-    void joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type, double rssi);
+    void joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type, double rssi = 0.0);
     void detachFromCluster(DeviceInterfaceType interface_type);
     void updatePublishers();
     void sendMemberReport();
+    void handleOrchestrationMessage(ConvoyControlService *msg);
+    void changeClusterMembership(Role role, int id_convoy, int id_cluster, int id_cluster_gw);
 
     MemberControlState _control_state {MemberControlState::INITIALIZING};
     std::vector<Broadcast> _broadcasts_received{};
