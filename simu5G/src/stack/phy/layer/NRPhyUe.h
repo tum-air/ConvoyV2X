@@ -50,7 +50,7 @@ class NRPhyUe : public LtePhyUeD2D
     /**
      * Convoy architecture start
      */
-    void attachToCluster(MacNodeId mac_cell_id, double rssi, bool is_rsu);
+    void attachToCluster(MacNodeId mac_cell_id, double rssi, bool is_rsu = false);
     /**
      * Convoy architecture end
      */

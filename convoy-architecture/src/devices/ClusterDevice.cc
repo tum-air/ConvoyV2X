@@ -2,6 +2,7 @@
 #include "ClusterDevice.h"
 #include "common/binder/Binder.h"
 #include "stack/phy/layer/LtePhyEnbD2D.h"
+#include "stack/phy/layer/NRPhyUe.h"
 
 namespace convoy_architecture {
 
@@ -131,6 +132,17 @@ void ClusterDevice::connectGatewayDeviceTo(omnetpp::cModule *base_node) {
 
     base_node->gate("outLlMemberReportGw")->connectTo(gate("fromAppMemberReport"));
     gate("toAppMemberReport")->connectTo(base_node->gate("inLlMemberReportGw"));
+}
+
+void ClusterDevice::joinNewCluster(int id_convoy, int id_cluster, double rssi) {
+    NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+    nic->attachToCluster(id_cluster, rssi);
+
+    // Use macNodeId assigned by binder as device address
+    Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+    _address = par("macNodeId").intValue();
+    _address_manager = binder->getNextHop(_address);
+    _address_convoy = id_convoy;
 }
 
 } // namespace convoy_architecture

@@ -134,6 +134,10 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
     std::string event{msg->getName()};
     if(event == std::string{"EventScanBroadcast"})
         handleBroadcastScanEvent();
+
+    // TODO - Setup events for next operational states - periodically update publisher info, trigger member report messages
+    // TODO - handle incoming convoy orchestration messages
+
 }
 
 void MembershipControl::handleBroadcastScanEvent() {
@@ -162,7 +166,7 @@ void MembershipControl::handleBroadcastScanEvent() {
             for(auto candidate : qualified_broadcasts) {
                 if(!candidate.full_convoy) {
                     if(!candidate.full_cluster) {
-                        joinNewCluster(candidate.id_convoy, candidate.id_cluster, DeviceInterfaceType::PRIMARY_INTERFACE);
+                        joinNewCluster(candidate.id_convoy, candidate.id_cluster, DeviceInterfaceType::PRIMARY_INTERFACE, candidate.rssi);
                     }
                     else {
                         createNewCluster(candidate.id_convoy);
@@ -181,9 +185,6 @@ void MembershipControl::handleBroadcastScanEvent() {
         createNewConvoy();
 
     _control_state = MemberControlState::INITIALIZED;
-
-    // TODO - Setup events for next operational states - periodically update publisher info, trigger member report messages
-    // TODO - handle incoming convoy orchestration messages
 }
 
 void MembershipControl::createNewConvoy() {
@@ -208,10 +209,11 @@ void MembershipControl::createNewCluster(int id_convoy) {
     updatePublishers();
 }
 
-void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type) {
-    /*
-     * CONTINUE HERE
-     */
+void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInterfaceType interface_type, double rssi) {
+    if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE)
+        _device_gw->joinNewCluster(id_convoy, id_cluster, rssi);
+    else
+        _device_pr->joinNewCluster(id_convoy, id_cluster, rssi);
 }
 
 void MembershipControl::updatePublishers()
