@@ -148,8 +148,6 @@ void ClusterDevice::joinNewCluster(int id_convoy, int id_cluster, double rssi) {
 }
 
 void ClusterDevice::detachFromCluster() {
-    // TODO detach mechanism
-    // TODO also inform binder
     _address = 0;
     _address_manager = 0;
     _address_convoy = 0;

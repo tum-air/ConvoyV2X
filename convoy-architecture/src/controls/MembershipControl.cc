@@ -250,12 +250,17 @@ void MembershipControl::joinNewCluster(int id_convoy, int id_cluster, DeviceInte
 void MembershipControl::detachFromCluster(DeviceInterfaceType interface_type) {
     if(interface_type == DeviceInterfaceType::GATEWAY_INTERFACE) {
         if(_device_gw->isModule() && (_device_gw->getAddressOfManager() != 0))
-        _device_gw->detachFromCluster();
+            _device_gw->detachFromCluster();
         _role = Role::MEMBER;
     }
     else {
-        if(_device_pr->isModule() && (_device_pr->getAddressOfManager() != 0))
-        _device_pr->detachFromCluster();
+        if(_device_pr->isModule() && (_device_pr->getAddressOfManager() != 0)) {
+            if(_device_pr->getDeviceType() == ClusterDeviceType::MASTER_DEVICE) {
+                Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
+                binder->deRegisterCluster(_device_pr->getAddressOfConvoy(), _device_pr->getAddressOfManager());
+            }
+            _device_pr->detachFromCluster();
+        }
         _role = Role::UNDEFINED;
         _control_state = MemberControlState::INITIALIZING;
     }
