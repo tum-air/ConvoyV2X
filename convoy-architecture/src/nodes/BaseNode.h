@@ -27,6 +27,9 @@ namespace convoy_architecture {
  */
 class BaseNode : public omnetpp::cSimpleModule
 {
+  private:
+    omnetpp::cMessage* _event;
+
   protected:
     virtual void initialize() override;
     virtual void handleMessage(omnetpp::cMessage *msg) override;
