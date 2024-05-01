@@ -25,8 +25,8 @@ module BaseNode
         bool hasDtwinPub = default(true);
         bool hasCoopMan = default(false);
         bool hasTracker = default(true);
-        string stationID = default("d1rsu[0]");
-        int convoyDirection = default(0);
+        string stationID @mutable = default("d1rsu[0]");
+        int convoyDirection @mutable = default(0);
         int stationType = default(0);
         string mobilityType = default("VeinsInetMobility");
         string detectorStationType = default("vehicle");

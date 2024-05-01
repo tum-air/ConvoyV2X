@@ -9,7 +9,7 @@ simple RoutingControl
 {
     parameters:
         int stationType = default(0);
-        int convoyDirection = default(0);
+        int convoyDirection @mutable = default(0);
         double roiHorizon @unit(m) = default(1000.0m);
         double roiNearby @unit(m) = default(300.0m);
         int sizeSubscriberMsg @unit(B)= default(10B);
