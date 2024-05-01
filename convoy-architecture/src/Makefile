@@ -53,6 +53,7 @@ OBJS = \
     $O/interfaces/MultipleInputSingleOutput.o \
     $O/nodes/BaseNode.o \
     $O/nodes/WrapperNode.o \
+    $O/scenarios/highway/HighwayScenario.o \
     $O/stores/DtwinStore.o \
     $O/stores/MemberStore.o \
     $O/stores/SubscriberStore.o \
