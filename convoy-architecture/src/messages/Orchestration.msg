@@ -8,6 +8,7 @@ message Orchestration {
     uint64_t timestamp;
     string node_id;
     int node_address;
+    int hop_address;
     int convoy_role;
     int cluster_role;
     int convoy_id;

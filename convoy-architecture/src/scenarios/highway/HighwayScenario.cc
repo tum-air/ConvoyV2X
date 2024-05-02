@@ -115,7 +115,7 @@ void HighwayScenario::createInitRSU(int station_id, double x, double y, ConvoyDi
         module->par("detectorFovTag") = "top";
         module->par("detectorFovLimitAngleMin") = 3.14;
         module->par("detectorFovLimitAngleMax") = 6.27;
-        backend_interface = getParentModule()->getSubmodule("backendInterfaceDown", station_id);
+        backend_interface = getParentModule()->getSubmodule("backendInterfaceBot", station_id);
         break;
     }
     module->par("stationType") = (int) StationType::RSU;

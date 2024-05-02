@@ -107,6 +107,11 @@ void ConvoyOrchestration::enforce_desired_state() {
         ConvoyControlService *ccs_msg = new ConvoyControlService("ConvoyOrchestration");
         ccs_msg->setNode_id(n.name.c_str());
         ccs_msg->setNode_address(n.address);
+        /*
+         * TODO
+         * Set next hop address - message is always routed through the rsu
+         * ccs_msg->setHop_address(? - obtain record of next hop from member store ?);
+         */
         ccs_msg->setTimestamp((uint64_t) omnetpp::simTime().raw());
         send(ccs_msg, "out");
     });

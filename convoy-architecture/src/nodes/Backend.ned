@@ -1,27 +1,13 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
 
 package convoy_architecture.nodes;
 
 import convoy_architecture.stores.DtwinStore;
-import convoy_architecture.interfaces.BackendMessaging;
+import convoy_architecture.controls.RoutingControl;
 import inet.node.base.TransportLayerNodeBase;
 import inet.applications.udpapp.UdpSocketIo;
 import inet.common.MessageDispatcher;
 import convoy_architecture.apps.ConvoyOrchestration;
-import convoy_architecture.stores.SubscriberStore;
+import convoy_architecture.stores.MemberStore;
 
 module Backend extends TransportLayerNodeBase
 {
@@ -36,60 +22,61 @@ module Backend extends TransportLayerNodeBase
         numEthInterfaces = default(1);
         *.interfaceTableModule = default(absPath(".interfaceTable"));
         mobility.typename = default("StationaryMobility");
-        string detectorStationType = default("rsu");
+        int stationType = default(2);
     submodules:
-        bmsAgent: BackendMessaging {
-            @display("p=375,80;is=s");
-            convoyDirection = parent.convoyDirection;
-        }
         dtwinStore: DtwinStore {
             @display("p=375,20");
-        }
-        ioAppDtwin: UdpSocketIo {
-            @display("p=375,130;is=s");
-            localPort = 31000;
-            destPort = 31000;
-        }
-        dispatcher_al: MessageDispatcher {
-            parameters:
-                @display("p=375,170;b=200,5,,,,1");
-        }
-        ioAppConvoyOrch: UdpSocketIo {
-            @display("p=500,130;is=s");
-            localPort = 41000;
-            destPort = 41000;
         }
         appConvoyOrch: ConvoyOrchestration {
             @display("p=500,20;is=s");
             convoyDirection = parent.convoyDirection;
         }
-        ioAppDtwinSub: UdpSocketIo {
-            @display("p=250,130;is=s");
-            localPort = 51000;
-            destPort = 51000;
-        }
-        subscriberStore: SubscriberStore {
+        memberStore: MemberStore {
             @display("p=250,20");
         }
+        routingControl: RoutingControl {
+            @display("p=375,80;is=s");
+            convoyDirection = parent.convoyDirection;
+        }
+        ioAppSubscriber: UdpSocketIo {
+            @display("p=375,130;is=s");
+            localPort = 21001;
+                destPort = 21002;
+        }
+        ioAppMemberReport: UdpSocketIo {
+            @display("p=250,100;is=s");
+            localPort = 21005;
+            destPort = 21005;
+        }
+        ioAppMemberControl: UdpSocketIo {
+            @display("p=500,100;is=s");
+            localPort = 21004;
+            destPort = 21004;
+        }
+        dispatcher_al: MessageDispatcher {
+            parameters:
+                @display("p=375,170;b=200,5,,,,1");
+        }
+
     connections allowunconnected:
         // application layer
         dispatcher_al.out++ --> udp.appIn;
         dispatcher_al.in++ <-- udp.appOut;
-        ioAppDtwin.socketOut --> dispatcher_al.in++;
-        ioAppDtwin.socketIn <-- dispatcher_al.out++;
-        bmsAgent.outLlDtwin --> ioAppDtwin.trafficIn;
-        ioAppDtwin.trafficOut --> bmsAgent.inLlDtwin;
-        bmsAgent.outUlDtwin --> dtwinStore.in;
-        ioAppConvoyOrch.socketOut --> dispatcher_al.in++;
-        ioAppConvoyOrch.socketIn <-- dispatcher_al.out++;
-        appConvoyOrch.out --> bmsAgent.inUlConvoyOrch;
-        bmsAgent.outLlConvoyOrch --> ioAppConvoyOrch.trafficIn;
-        bmsAgent.outUlConvoyOrch --> appConvoyOrch.in;
-        ioAppConvoyOrch.trafficOut --> bmsAgent.inLlConvoyOrch;
+        ioAppSubscriber.socketOut --> dispatcher_al.in++;
+        ioAppSubscriber.socketIn <-- dispatcher_al.out++;
+        ioAppMemberReport.socketOut --> dispatcher_al.in++;
+        ioAppMemberReport.socketIn <-- dispatcher_al.out++;        
+        ioAppMemberControl.socketOut --> dispatcher_al.in++;
+        ioAppMemberControl.socketIn <-- dispatcher_al.out++;
         
-        ioAppDtwinSub.socketOut --> dispatcher_al.in++;
-        ioAppDtwinSub.socketIn <-- dispatcher_al.out++;
-        bmsAgent.outLlDtwinSub --> ioAppDtwinSub.trafficIn;
-        ioAppDtwinSub.trafficOut --> bmsAgent.inLlDtwinSub;
-        bmsAgent.outUlDtwinSub --> subscriberStore.in;
+        ioAppSubscriber.trafficOut --> routingControl.inLlSubscriber;
+        ioAppSubscriber.trafficOut --> routingControl.inLlSubscriber;
+        ioAppMemberReport.trafficOut --> routingControl.inLlMemberReport;
+        ioAppMemberReport.trafficIn <-- routingControl.outLlMemberReport;
+        ioAppMemberControl.trafficOut --> routingControl.inLlMemberControl;
+        ioAppMemberControl.trafficIn <-- routingControl.outLlMemberControl;
+        
+        routingControl.outUlSubscriber --> dtwinStore.in;
+        routingControl.outUlMemberControl --> memberStore.in;
+        routingControl.inUlMemberControl <-- appConvoyOrch.out;
 }

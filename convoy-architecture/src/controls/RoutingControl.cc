@@ -122,35 +122,27 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
             if(membership_control->isInitialized()) {
                 SubscriberStore *store = check_and_cast<SubscriberStore *>(getParentModule()->getSubmodule("subscriberStore"));
                 const std::vector<Subscription>& subscribers = store->readSubscriptions();
-                if(subscribers.size() > 0)
-                {
-                    // Send out the dtwin publications to the subcribers
-                    std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
-                        TransportPacket *transport_packet = new TransportPacket();
-                        ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(msg->dup());
-                        transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
-                        transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
-                        transport_packet->setMsg_publisher(*dtwin_pub_msg);
-                        transport_packet->setDst_mac_id(s.id);
-                        forwardToNetwork(transport_packet, MessageType::PUBLICATION);
-                    });
 
-                    // Send out a copy to the backend
-                    if(par("stationType").intValue() == StationType::RSU) {
-                        TransportPacket *transport_packet = new TransportPacket();
-                        ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
-                        transport_packet->setTimestamp(msg_dtwin->getTimestamp());
-                        transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
-                        transport_packet->setMsg_publisher(*msg_dtwin);
-                        forwardToBackend(transport_packet, MessageType::PUBLICATION);
-                    }
-                    else
-                        delete msg;
+                // Send out the dtwin publications to the subcribers
+                std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
+                    TransportPacket *transport_packet = new TransportPacket();
+                    ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(msg->dup());
+                    transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
+                    transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
+                    transport_packet->setMsg_publisher(*dtwin_pub_msg);
+                    transport_packet->setDst_mac_id(s.id);
+                    forwardToNetwork(transport_packet, MessageType::PUBLICATION);
+                });
+                // Send out a copy to the backend
+                if(par("stationType").intValue() == StationType::RSU) {
+                    TransportPacket *transport_packet = new TransportPacket();
+                    ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
+                    transport_packet->setTimestamp(msg_dtwin->getTimestamp());
+                    transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
+                    transport_packet->setMsg_publisher(*msg_dtwin);
+                    forwardToBackend(transport_packet, MessageType::PUBLICATION);
                 }
-                else {
-                    EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher: no known subscribers available, ignoring message" << std::endl;
-                    delete msg;
-                }
+                delete msg;
             }
             else
                 delete msg;
@@ -261,6 +253,7 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
         transport_packet->setChunkLength(inet::B(par("sizeOrchestrationMsg").intValue()));
         transport_packet->setMsg_orchestration(*msg_orchestration);
         transport_packet->setDst_mac_id(msg_orchestration->getNode_address());
+        transport_packet->setHop_mac_id(msg_orchestration->getHop_address());
         forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
     }
     else if(arrival_gate == "inBkndMemberControl") {
@@ -366,41 +359,43 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
         chunk_length = par("sizeOrchestrationMsg").intValue();
     }
 
-    MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    int destination_cluster = (int) binder->getNextHop((MacNodeId) transport_packet->getDst_mac_id());
-    transport_packet->setDst_cluster(destination_cluster);
-    ClusterDeviceType target_device = membership_control->clusterMatch(destination_cluster);
-    if(target_device == ClusterDeviceType::MASTER_DEVICE) {
-        // the destination node is within the same cluster as this node
-        // this cluster is also being managed by this node
-        // Use the destination mac id as next hop
-        transport_packet->setHop_cluster(destination_cluster);
-        transport_packet->setHop_mac_id(transport_packet->getDst_mac_id());
-    }
-    else if(target_device == ClusterDeviceType::MEMBER_DEVICE) {
-        // the destination node is within the same cluster as this node
-        // this node is of type member in this cluster
-        // Use the mac id of this member's manager as next hop
-        transport_packet->setHop_cluster(destination_cluster);
-        transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForPrimaryDevice());
-    }
-    else if(target_device == ClusterDeviceType::GATEWAY_DEVICE) {
-        // the destination node is within the same cluster as this node
-        // this node is of type gateway in this cluster
-        // Use the mac id of this gateway's manager as next hop
-        transport_packet->setHop_cluster(destination_cluster);
-        transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForGatewayDevice());
-    }
-    else {
-        // There is no direct route to the destination from this node
-        // Only single-cluster-hop supported currently
-        delete transport_packet;
+    if(par("stationType").intValue() != StationType::BACKEND) {
+        MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+        int destination_cluster = (int) binder->getNextHop((MacNodeId) transport_packet->getDst_mac_id());
+        transport_packet->setDst_cluster(destination_cluster);
+        ClusterDeviceType target_device = membership_control->clusterMatch(destination_cluster);
+        if(target_device == ClusterDeviceType::MASTER_DEVICE) {
+            // the destination node is within the same cluster as this node
+            // this cluster is also being managed by this node
+            // Use the destination mac id as next hop
+            transport_packet->setHop_cluster(destination_cluster);
+            transport_packet->setHop_mac_id(transport_packet->getDst_mac_id());
+        }
+        else if(target_device == ClusterDeviceType::MEMBER_DEVICE) {
+            // the destination node is within the same cluster as this node
+            // this node is of type member in this cluster
+            // Use the mac id of this member's manager as next hop
+            transport_packet->setHop_cluster(destination_cluster);
+            transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForPrimaryDevice());
+        }
+        else if(target_device == ClusterDeviceType::GATEWAY_DEVICE) {
+            // the destination node is within the same cluster as this node
+            // this node is of type gateway in this cluster
+            // Use the mac id of this gateway's manager as next hop
+            transport_packet->setHop_cluster(destination_cluster);
+            transport_packet->setHop_mac_id(membership_control->getAddressOfManagerForGatewayDevice());
+        }
+        else {
+            // There is no direct route to the destination from this node
+            // Only single-cluster-hop supported currently
+            delete transport_packet;
 
-        // TODO - future work - multi-cluster-hop
-        // If this node is a master, forward the message to the node having a gateway to the next closest cluster id
-        // If not forward the message to either this member's manager or this gateway's manager depending on which cluster id is closest
-        // Also use this information for expansion of cluster boundary
+            // TODO - future work - multi-cluster-hop
+            // If this node is a master, forward the message to the node having a gateway to the next closest cluster id
+            // If not forward the message to either this member's manager or this gateway's manager depending on which cluster id is closest
+            // Also use this information for expansion of cluster boundary
+        }
     }
 
     // Prepare and send inet Packet
@@ -417,16 +412,50 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
 }
 
 void RoutingControl::forwardToBackend(TransportPacket *transport_packet, MessageType type) {
-    if(type == MessageType::PUBLICATION) {
-        ObjectList *msg_publisher = transport_packet->getMsg_publisher().dup();
-        send(msg_publisher, "outBkndPublisher");
+    std::string packet_name {""};
+    std::string gate_name {""};
+    std::string destination {""};
+    ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
+    int destination_port {0};
+    switch(direction)
+    {
+    case ConvoyDirection::TOP:
+        destination = std::string{"backendTop"};
+        break;
+    case ConvoyDirection::DOWN:
+        destination = std::string{"backendBot"};
+        break;
+    default:
+        break;
     }
-    else if(type == MessageType::MEMBER_STATUS) {
-        MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
-        send(msg_member_status, "outBkndMemberReport");
+    switch(type)
+    {
+    case MessageType::PUBLICATION:
+        packet_name = std::string{"dtwin_publication"};
+        gate_name = std::string{"outBkndPublisher"};
+        destination_port = par("destPortPublisher").intValue();
+        break;
+    case MessageType::MEMBER_STATUS:
+        packet_name = std::string{"member_report"};
+        gate_name = std::string{"outBkndMemberReport"};
+        destination_port = par("destPortMemberReport").intValue();
+        break;
+    default:
+        break;
     }
 
-    delete transport_packet;
+    if(!destination.empty() && !gate_name.empty()) {
+        inet::Packet *packet = new inet::Packet(packet_name.c_str());
+        packet->insertAtBack(inet::makeShared<TransportPacket>(*transport_packet));
+        inet::L3Address destination_address = inet::L3AddressResolver().resolve(destination.c_str());
+        auto addressReq = packet->addTagIfAbsent<inet::L3AddressReq>();
+        addressReq->setDestAddress(destination_address);
+        auto portReq = packet->addTagIfAbsent<inet::L4PortReq>();
+        portReq->setDestPort(destination_port);
+        send(packet, gate_name.c_str());
+    }
+    else
+        delete transport_packet;
 }
 
 } // namespace convoy_architecture
