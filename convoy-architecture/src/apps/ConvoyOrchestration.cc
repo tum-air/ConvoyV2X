@@ -1,35 +1,21 @@
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-// 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
 
 #include "ConvoyOrchestration.h"
+#include "stores/DtwinStore.h"
+#include "stores/MemberStore.h"
+#include "messages/ObjectList_m.h"
 #include "messages/ConvoyControlService_m.h"
+#include "veins_inet/VeinsInetMobility.h"
 
 namespace convoy_architecture {
 
 Define_Module(ConvoyOrchestration);
 
-ConvoyOrchestration::ConvoyOrchestration()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-}
-
 ConvoyOrchestration::~ConvoyOrchestration()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
+    _update_event = nullptr;
 }
 
 void ConvoyOrchestration::initialize()
@@ -41,8 +27,6 @@ void ConvoyOrchestration::initialize()
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
-    _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
-    _member_store = check_and_cast<MemberStore*>(this->getParentModule()->getSubmodule("memberStore"));
 
     if(par("stopTime").doubleValue() > start_time)
     {
@@ -90,7 +74,8 @@ void ConvoyOrchestration::estimate_actual_state() {
     if(dtwins != nullptr)
         delete dtwins;
      */
-    const std::vector<Node>& ccs_reports = _member_store->readCCSReports();
+    MemberStore *member_store = check_and_cast<MemberStore*>(this->getParentModule()->getSubmodule("memberStore"));
+    const std::vector<Node>& ccs_reports = member_store->readCCSReports();
     std::copy(std::begin(ccs_reports), std::end(ccs_reports), std::back_inserter(_current_state));
 }
 

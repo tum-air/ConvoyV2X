@@ -3,14 +3,10 @@
 #define __CONVOY_ARCHITECTURE_PUBLISHER_H_
 
 #include <omnetpp.h>
-#include "stores/DtwinStore.h"
 #include "messages/ObjectList_m.h"
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class Publisher : public omnetpp::cSimpleModule
 {
   private:
@@ -18,9 +14,8 @@ class Publisher : public omnetpp::cSimpleModule
     omnetpp::simtime_t _start_time;
     omnetpp::simtime_t _stop_time;
     omnetpp::simtime_t _update_rate;
-    omnetpp::cMessage* _start_event;
-    omnetpp::cMessage* _update_event;
-    DtwinStore* _dtwin_store;
+    omnetpp::cMessage* _start_event {nullptr};
+    omnetpp::cMessage* _update_event {nullptr};
     ObjectList* readDtwin();
     void sendDtwinMessage(ObjectList *dtwin_message);
   protected:
@@ -28,7 +23,6 @@ class Publisher : public omnetpp::cSimpleModule
     virtual void handleMessage(omnetpp::cMessage *msg) override;
   public:
     ~Publisher();
-    Publisher();
 };
 
 } // namespace convoy_architecture

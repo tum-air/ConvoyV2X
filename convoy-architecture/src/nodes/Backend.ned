@@ -70,7 +70,7 @@ module Backend extends TransportLayerNodeBase
         ioAppMemberControl.socketIn <-- dispatcher_al.out++;
         
         ioAppSubscriber.trafficOut --> routingControl.inLlSubscriber;
-        ioAppSubscriber.trafficOut --> routingControl.inLlSubscriber;
+        ioAppSubscriber.trafficIn <-- routingControl.outLlSubscriber;
         ioAppMemberReport.trafficOut --> routingControl.inLlMemberReport;
         ioAppMemberReport.trafficIn <-- routingControl.outLlMemberReport;
         ioAppMemberControl.trafficOut --> routingControl.inLlMemberControl;

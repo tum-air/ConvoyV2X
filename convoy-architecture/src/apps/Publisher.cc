@@ -1,20 +1,17 @@
 
 #include "Publisher.h"
+#include "stores/DtwinStore.h"
 
 namespace convoy_architecture {
 
 Define_Module(Publisher);
 
-Publisher::Publisher()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-}
-
 Publisher::~Publisher()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
+    _start_event = nullptr;
 }
 
 void Publisher::initialize()
@@ -29,7 +26,6 @@ void Publisher::initialize()
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
-    _dtwin_store = omnetpp::check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
 
     if(_stop_time > _start_time)
     {
@@ -74,7 +70,8 @@ void Publisher::handleMessage(omnetpp::cMessage *msg)
 
 ObjectList* Publisher::readDtwin()
 {
-    return(_dtwin_store->readFromStore());
+    DtwinStore *dtwin_store = omnetpp::check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+    return(dtwin_store->readFromStore());
 }
 
 void Publisher::sendDtwinMessage(ObjectList *dtwin_message)

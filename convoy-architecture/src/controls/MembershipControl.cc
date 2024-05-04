@@ -13,8 +13,11 @@ Define_Module(MembershipControl);
 MembershipControl::~MembershipControl()
 {
     cancelAndDelete(_event_scan_broadcast);
+    _event_scan_broadcast = nullptr;
     cancelAndDelete(_event_publisher_update);
+    _event_publisher_update = nullptr;
     cancelAndDelete(_event_member_report);
+    _event_member_report = nullptr;
     /* TODO
     cancelAndDelete(_outstanding_scheduled_messages);
     */
@@ -46,6 +49,9 @@ void MembershipControl::initialize()
     double scan_interval = par("broadcastScanInterval").doubleValue();
     scan_duration = (scan_duration < scan_interval)? (3.0 * scan_interval) : scan_duration;
     scheduleAfter(scan_duration, _event_scan_broadcast);
+
+    WATCH(_control_state);
+    WATCH(_role);
 }
 
 ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType device_type, DeviceInterfaceType interface_type, int id_convoy) {
@@ -111,7 +117,7 @@ void MembershipControl::updateLocation(ClusterDevice* device)
     case ClusterDeviceType::GATEWAY_DEVICE:
         offset_x = -2.0;
         offset_y = -1.0;
-        color = "lightblue";
+        color = "blue";
         break;
     default:
         offset_x = 2.0;

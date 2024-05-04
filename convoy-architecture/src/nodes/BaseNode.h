@@ -23,7 +23,7 @@
 namespace convoy_architecture {
 
 /**
- * TODO - Generated class
+ * Common base node device
  */
 class BaseNode : public omnetpp::cSimpleModule
 {

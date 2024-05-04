@@ -8,9 +8,6 @@
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class SubscriberStore : public omnetpp::cSimpleModule
 {
   private:
@@ -26,6 +23,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
     ~SubscriberStore() {
         if (_subscriber_expiry_check_event != nullptr)
             cancelAndDelete(_subscriber_expiry_check_event);
+        _subscriber_expiry_check_event = nullptr;
     }
     const std::vector<Subscription>& readSubscriptions() const;
 };

@@ -22,9 +22,6 @@
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class MessagingControl : public omnetpp::cSimpleModule
 {
 private:

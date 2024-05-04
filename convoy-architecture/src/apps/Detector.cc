@@ -21,19 +21,16 @@ namespace convoy_architecture {
 
 Define_Module(Detector);
 
-Detector::Detector()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-    _detected_objects = nullptr;
-}
-
 Detector::~Detector()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
-    if(_detected_objects != nullptr)
+    _update_event = nullptr;
+    if(_detected_objects != nullptr) {
         delete _detected_objects;
+        _detected_objects = nullptr;
+    }
 }
 
 void Detector::initialize()

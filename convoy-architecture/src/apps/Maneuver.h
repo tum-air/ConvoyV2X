@@ -5,14 +5,9 @@
 #include <omnetpp.h>
 #include <vector>
 #include "messages/CoopManeuver_m.h"
-#include "stores/DtwinStore.h"
-#include "apps/Localizer.h"
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class Maneuver : public omnetpp::cSimpleModule
 {
 private:
@@ -22,13 +17,11 @@ private:
     omnetpp::simtime_t _start_time;
     omnetpp::simtime_t _stop_time;
     omnetpp::simtime_t _update_rate;
-    omnetpp::cMessage* _start_event;
-    omnetpp::cMessage* _update_event;
+    omnetpp::cMessage* _start_event{nullptr};
+    omnetpp::cMessage* _update_event{nullptr};
     std::vector<std::string> _partner_id;
     std::vector<int> _partner_address;
     double _limit_roi_distance;
-    DtwinStore* _dtwin_store;
-    Localizer* _localizer_app;
     void findCoopManeuverPartner();
     std::vector<CoopManeuver*> createCoopManeuverMessage();
     void sendCoopManeuverMessage(std::vector<CoopManeuver*> coop_maneuver_message_list);
@@ -39,7 +32,6 @@ protected:
     virtual void handleMessage(omnetpp::cMessage *msg) override;
 public:
     ~Maneuver();
-    Maneuver();
     void updateROI(std::string roi_tag);
     void updateQOS(std::string qos_tag);
     void updateEgoID(std::string ego_id);

@@ -4,20 +4,15 @@
 
 #include <omnetpp.h>
 #include <vector>
-#include "stores/DtwinStore.h"
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class Localizer : public omnetpp::cSimpleModule
 {
   public:
     enum LocalizationState {STATE_INIT, STATE_LOCALIZING, STATE_LOCALIZED};
     enum LocalizationStrategy {STRATEGY_VISUAL_CUES}; // can be extended
     ~Localizer();
-    Localizer();
     bool isLocalized();
     std::string readEgoID();
     std::string readEgoType();
@@ -30,8 +25,8 @@ class Localizer : public omnetpp::cSimpleModule
     omnetpp::simtime_t _init_time;
     omnetpp::simtime_t _stop_time;
     omnetpp::simtime_t _update_rate;
-    omnetpp::cMessage* _start_event;
-    omnetpp::cMessage* _update_event;
+    omnetpp::cMessage* _start_event{nullptr};
+    omnetpp::cMessage* _update_event{nullptr};
     double _min_duration_localization;
     double _max_age_localization;
     LocalizationStrategy _localization_strategy;
@@ -43,7 +38,6 @@ class Localizer : public omnetpp::cSimpleModule
     double _ego_position_y;
     double _ego_position_z;
     double _ego_heading;
-    DtwinStore* _dtwin_store;
     void egoStateUpdate();
     void localizationStateUpdate();
     std::string localizationStrategyVisualCues(std::set<std::string> object_ids);

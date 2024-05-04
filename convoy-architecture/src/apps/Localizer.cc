@@ -2,21 +2,18 @@
 #include "Localizer.h"
 #include "messages/ObjectList_m.h"
 #include "nodes/BaseNode.h"
+#include "stores/DtwinStore.h"
 
 namespace convoy_architecture {
 
 Define_Module(Localizer);
 
-Localizer::Localizer()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-}
-
 Localizer::~Localizer()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
+    _update_event = nullptr;
 }
 
 void Localizer::initialize()
@@ -39,8 +36,6 @@ void Localizer::initialize()
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
-
-    _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
 
     if(_stop_time > _start_time)
     {
@@ -140,12 +135,13 @@ void Localizer::localizationStateUpdate()
 
 void Localizer::executeLocalizationStrategy()
 {
+    DtwinStore *dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
     // Function to implement localization strategy
     switch (_localization_strategy)
     {
     case STRATEGY_VISUAL_CUES:
         // Assuming that the visual cues are encode into object id string information
-        _ego_id = localizationStrategyVisualCues(_dtwin_store->readIDs());
+        _ego_id = localizationStrategyVisualCues(dtwin_store->readIDs());
         break;
     default:
         _ego_id = std::string("NULL");
@@ -207,12 +203,13 @@ void Localizer::readCurrentLocation()
     std::string parent_type = par("stationType").stdstringValue();
     if(parent_type == std::string("vehicle"))
     {
-        _ego_type = _dtwin_store->readType(_ego_id);
-        _ego_position_x = _dtwin_store->readPositionX(_ego_id);
-        _ego_position_y = _dtwin_store->readPositionY(_ego_id);
-        _ego_position_z = _dtwin_store->readPositionZ(_ego_id);
-        _ego_heading = _dtwin_store->readHeading(_ego_id);
-        _ego_timestamp = _dtwin_store->readTimestamp(_ego_id);
+        DtwinStore *dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+        _ego_type = dtwin_store->readType(_ego_id);
+        _ego_position_x = dtwin_store->readPositionX(_ego_id);
+        _ego_position_y = dtwin_store->readPositionY(_ego_id);
+        _ego_position_z = dtwin_store->readPositionZ(_ego_id);
+        _ego_heading = dtwin_store->readHeading(_ego_id);
+        _ego_timestamp = dtwin_store->readTimestamp(_ego_id);
     }
     else
     {

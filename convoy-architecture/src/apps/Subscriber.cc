@@ -5,16 +5,12 @@ namespace convoy_architecture {
 
 Define_Module(Subscriber);
 
-Subscriber::Subscriber()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-}
-
 Subscriber::~Subscriber()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
+    _update_event = nullptr;
 }
 
 void Subscriber::initialize()

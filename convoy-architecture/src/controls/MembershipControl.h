@@ -50,8 +50,6 @@ public:
     bool addressMatchesGatewayDevice(int address) {return (_device_gw == nullptr)? false : (address==_device_gw->getAddress());}
     ClusterDeviceType clusterMatch(int cluster_address);
     void receiveSignal(omnetpp::cComponent *source, omnetpp::simsignal_t signalID, omnetpp::cObject *obj, omnetpp::cObject *) override;
-
-    //
     ~MembershipControl();
 };
 

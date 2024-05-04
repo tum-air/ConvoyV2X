@@ -9,6 +9,7 @@ Define_Module(BaseNode);
 BaseNode::~BaseNode()
 {
     cancelAndDelete(_event);
+    _event = nullptr;
 }
 
 void BaseNode::initialize()
@@ -37,7 +38,7 @@ void BaseNode::handleMessage(omnetpp::cMessage *msg)
     if(msg->isSelfMessage()) {
         if(std::string{msg->getName()} == std::string{"setupMembershipControl"}) {
             par("convoyDirection") = (int) getDirection();
-            getSubmodule("mcsAgent")->par("convoyDirection") = par("convoyDirection").intValue();
+            getSubmodule("routingControl")->par("convoyDirection") = par("convoyDirection").intValue();
             setupMembershipControl();
         }
     }
@@ -61,7 +62,7 @@ void BaseNode::setupMembershipControl()
     // Set position
     omnetpp::cDisplayString display_string = membership_control_agent->getDisplayString();
     display_string.setTagArg("p", 0, 400);
-    display_string.setTagArg("p", 1, 250);
+    display_string.setTagArg("p", 1, 350);
     display_string.setTagArg("is", 0, "s");
     membership_control_agent->setDisplayString(display_string.str());
     membership_control_agent->setDisplayName(module_name.c_str());
@@ -73,7 +74,7 @@ void BaseNode::setupMembershipControl()
     membership_control_agent->callInitialize();
 
     // Connect to routing control agent for messaging
-    RoutingControl *routing_control_agent = check_and_cast<RoutingControl *>(this->getSubmodule("routingControl"));
+    RoutingControl *routing_control_agent = check_and_cast<RoutingControl *>(getSubmodule("routingControl"));
     routing_control_agent->gate("outUlMemberControl")->connectTo(membership_control_agent->gate("in"));
     membership_control_agent->gate("out")->connectTo(routing_control_agent->gate("inUlMemberReport"));
 }

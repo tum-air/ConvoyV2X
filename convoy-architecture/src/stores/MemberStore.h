@@ -22,9 +22,6 @@
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class MemberStore : public omnetpp::cSimpleModule
 {
   private:
@@ -40,6 +37,7 @@ class MemberStore : public omnetpp::cSimpleModule
     ~MemberStore() {
         if (_member_expiry_check_event != nullptr)
             cancelAndDelete(_member_expiry_check_event);
+        _member_expiry_check_event = nullptr;
     }
     const std::vector<Node>& readCCSReports() const;
 };

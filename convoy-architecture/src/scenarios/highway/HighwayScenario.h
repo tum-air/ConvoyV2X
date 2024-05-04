@@ -4,6 +4,7 @@
 
 #include <omnetpp.h>
 #include "common/defs.h"
+#include "nodes/BaseNode.h"
 
 namespace convoy_architecture {
 
@@ -13,7 +14,7 @@ class HighwayScenario : public cSimpleModule
     int _counter {0};
     omnetpp::cMessage* _event{nullptr};
     std::vector<omnetpp::cRectangleFigure *> _roads{};
-    std::vector<omnetpp::cModule*> _rsus;
+    std::vector<BaseNode*> _rsus;
     void drawRoad(std::string name, double x, double y, double lx, double ly);
     void setupRSU(ConvoyDirection direction);
     void createInitRSU(int station_id, double x, double y, ConvoyDirection direction);
@@ -21,9 +22,7 @@ class HighwayScenario : public cSimpleModule
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
-
-  public:
-      ~HighwayScenario();
+    virtual void finish() override;
 };
 
 } // namespace convoy_architecture

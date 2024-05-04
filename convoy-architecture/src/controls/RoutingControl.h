@@ -9,9 +9,6 @@
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
 class RoutingControl : public omnetpp::cSimpleModule
 {
   private:

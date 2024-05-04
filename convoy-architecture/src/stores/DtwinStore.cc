@@ -21,14 +21,10 @@ namespace convoy_architecture {
 
 Define_Module(DtwinStore);
 
-DtwinStore::DtwinStore()
-{
-    //
-}
-
 DtwinStore::~DtwinStore()
 {
     cancelAndDelete(_object_expiry_check_event);
+    _object_expiry_check_event = nullptr;
 }
 
 void DtwinStore::initialize()

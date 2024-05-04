@@ -1,20 +1,18 @@
 
 #include "Maneuver.h"
+#include "stores/DtwinStore.h"
+#include "apps/Localizer.h"
 
 namespace convoy_architecture {
 
 Define_Module(Maneuver);
 
-Maneuver::Maneuver()
-{
-    _start_event = nullptr;
-    _update_event = nullptr;
-}
-
 Maneuver::~Maneuver()
 {
     cancelAndDelete(_start_event);
+    _start_event = nullptr;
     cancelAndDelete(_update_event);
+    _update_event = nullptr;
 }
 
 void Maneuver::initialize()
@@ -37,9 +35,6 @@ void Maneuver::initialize()
 
     _start_event = new omnetpp::cMessage("startEvent");
     _update_event = new omnetpp::cMessage("updateEvent");
-
-    _dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
-    _localizer_app = check_and_cast<Localizer*>(this->getParentModule()->getSubmodule("appLocalizer"));
 
     if(_stop_time > _start_time)
     {
@@ -65,7 +60,8 @@ void Maneuver::handleMessage(omnetpp::cMessage *msg)
         else if (msg == _update_event)
         {
             // Proceed only if the localizer is ready
-            if(_localizer_app->isLocalized())
+            Localizer *localizer_app = check_and_cast<Localizer*>(this->getParentModule()->getSubmodule("appLocalizer"));
+            if(localizer_app->isLocalized())
             {
                 this->findCoopManeuverPartner();
                 this->sendCoopManeuverMessage(this->createCoopManeuverMessage());
@@ -97,15 +93,17 @@ void Maneuver::findCoopManeuverPartner()
     _partner_address.clear();
 
     // Update the list of partners based on dtwin info
-    ObjectList *dtwin_list = _dtwin_store->readFromStore();
+    DtwinStore *dtwin_store = check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+    ObjectList *dtwin_list = dtwin_store->readFromStore();
 
     // Locate self - read from localizer app
-    _ego_id = _localizer_app->readEgoID();
-    std::string ego_type = _localizer_app->readEgoType();
-    double ego_position_x = _localizer_app->readEgoPositionX();
-    double ego_position_y = _localizer_app->readEgoPositionY();
-    double ego_position_z = _localizer_app->readEgoPositionZ();
-    double ego_heading = _localizer_app->readEgoHeading();
+    Localizer *localizer_app = check_and_cast<Localizer*>(this->getParentModule()->getSubmodule("appLocalizer"));
+    _ego_id = localizer_app->readEgoID();
+    std::string ego_type = localizer_app->readEgoType();
+    double ego_position_x = localizer_app->readEgoPositionX();
+    double ego_position_y = localizer_app->readEgoPositionY();
+    double ego_position_z = localizer_app->readEgoPositionZ();
+    double ego_heading = localizer_app->readEgoHeading();
 
     // Figure out partners by iterating through dtwin list
     for(int dtwin_index=0; dtwin_index<dtwin_list->getN_objects(); dtwin_index++)

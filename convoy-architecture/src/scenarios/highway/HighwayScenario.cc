@@ -5,16 +5,25 @@ namespace convoy_architecture {
 
 Define_Module(HighwayScenario);
 
-HighwayScenario::~HighwayScenario()
+void HighwayScenario::finish()
 {
+    /*
+     * CONTINUE HERE
+     */
     cancelAndDelete(_event);
-    std::for_each(_rsus.begin(), _rsus.end(), [] (omnetpp::cModule *rsu) {
-        if(rsu->isModule())
-            rsu->deleteModule();
-    });
-    std::for_each(_roads.begin(), _roads.end(), [this] (omnetpp::cRectangleFigure *road) {
-        getParentModule()->getCanvas()->removeFigure(road);
-        delete road;
+    _event = nullptr;
+    // Clean-up all nodes and devices not part of initial world at start-up
+    std::vector<std::string> modules = {
+            std::string{"d"} + std::to_string((int)ConvoyDirection::TOP) + std::string{"rsu"},
+            std::string{"d"} + std::to_string((int)ConvoyDirection::DOWN) + std::string{"rsu"},
+            std::string{"vehicle"},
+            std::string{"master"},
+            std::string{"member"},
+            std::string{"gateway"}
+    };
+    std::for_each(modules.begin(), modules.end(), [this](std::string const& module) {
+        if(getParentModule()->hasSubmoduleVector(module.c_str()))
+            getParentModule()->deleteSubmoduleVector(module.c_str());
     });
 }
 
@@ -91,7 +100,7 @@ void HighwayScenario::createInitRSU(int station_id, double x, double y, ConvoyDi
         getParentModule()->addSubmoduleVector(module_name.c_str(), par("n_stations").intValue());
 
     // Create the sensor station module
-    omnetpp::cModule *module = omnetpp::cModuleType::get("convoy_architecture.nodes.BaseNode")->create(module_name.c_str(), getParentModule(), station_id);
+    BaseNode *module = check_and_cast<BaseNode*>(omnetpp::cModuleType::get("convoy_architecture.nodes.BaseNode")->create(module_name.c_str(), getParentModule(), station_id));
 
     // Set position
     omnetpp::cDisplayString display_string = module->getDisplayString();
@@ -109,13 +118,13 @@ void HighwayScenario::createInitRSU(int station_id, double x, double y, ConvoyDi
         module->par("detectorFovTag") = "down";
         module->par("detectorFovLimitAngleMin") = 0.00;
         module->par("detectorFovLimitAngleMax") = 3.13;
-        backend_interface = getParentModule()->getSubmodule("backendInterfaceTop", station_id);
+        backend_interface = getParentModule()->getSubmodule("backendInterfaceBot", station_id);
         break;
     default:
         module->par("detectorFovTag") = "top";
         module->par("detectorFovLimitAngleMin") = 3.14;
         module->par("detectorFovLimitAngleMax") = 6.27;
-        backend_interface = getParentModule()->getSubmodule("backendInterfaceBot", station_id);
+        backend_interface = getParentModule()->getSubmodule("backendInterfaceTop", station_id);
         break;
     }
     module->par("stationType") = (int) StationType::RSU;

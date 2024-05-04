@@ -38,7 +38,7 @@ protected:
     std::map<std::string, uint64_t> _object_timestamp;
     omnetpp::simtime_t _object_max_age;
     omnetpp::simtime_t _object_expiry_check_interval;
-    omnetpp::cMessage *_object_expiry_check_event = nullptr;
+    omnetpp::cMessage *_object_expiry_check_event{nullptr};
 
   protected:
     virtual void initialize() override;
@@ -48,7 +48,6 @@ protected:
 
   public:
     ~DtwinStore();
-    DtwinStore();
     ObjectList* readFromStore();
     std::set<std::string> readIDs();
     std::string readType(std::string object_id);

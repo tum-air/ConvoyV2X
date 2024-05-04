@@ -22,10 +22,6 @@
 
 namespace convoy_architecture {
 
-/**
- * TODO - Generated class
- */
-
 class Subscriber : public omnetpp::cSimpleModule
 {
   private:
@@ -36,8 +32,8 @@ class Subscriber : public omnetpp::cSimpleModule
     omnetpp::simtime_t _start_time;
     omnetpp::simtime_t _stop_time;
     omnetpp::simtime_t _update_rate;
-    omnetpp::cMessage* _start_event;
-    omnetpp::cMessage* _update_event;
+    omnetpp::cMessage* _start_event{nullptr};
+    omnetpp::cMessage* _update_event{nullptr};
     void sendDtwinSubscriptionMessage();
     void receiveDtwinMessage(ObjectList *dtwin_message);
   protected:
@@ -45,7 +41,6 @@ class Subscriber : public omnetpp::cSimpleModule
     virtual void handleMessage(omnetpp::cMessage *msg) override;
   public:
     ~Subscriber();
-    Subscriber();
     void updateROI(std::string roi_tag);
     void updateQOS(std::string qos_tag);
     void updateSubscriberID(std::string subscriber_id);
