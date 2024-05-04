@@ -7,19 +7,14 @@ Define_Module(HighwayScenario);
 
 void HighwayScenario::finish()
 {
-    /*
-     * CONTINUE HERE
-     */
     cancelAndDelete(_event);
     _event = nullptr;
+
     // Clean-up all nodes and devices not part of initial world at start-up
     std::vector<std::string> modules = {
             std::string{"d"} + std::to_string((int)ConvoyDirection::TOP) + std::string{"rsu"},
             std::string{"d"} + std::to_string((int)ConvoyDirection::DOWN) + std::string{"rsu"},
-            std::string{"vehicle"},
-            std::string{"master"},
-            std::string{"member"},
-            std::string{"gateway"}
+            std::string{"vehicle"}
     };
     std::for_each(modules.begin(), modules.end(), [this](std::string const& module) {
         if(getParentModule()->hasSubmoduleVector(module.c_str()))

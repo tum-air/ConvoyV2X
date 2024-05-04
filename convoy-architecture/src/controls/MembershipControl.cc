@@ -18,18 +18,21 @@ MembershipControl::~MembershipControl()
     _event_publisher_update = nullptr;
     cancelAndDelete(_event_member_report);
     _event_member_report = nullptr;
-    /* TODO
-    cancelAndDelete(_outstanding_scheduled_messages);
-    */
 
     // Disconnect and remove associated cluster devices
     if (_device_pr != nullptr) {
-        _device_pr->disconnect();
-        _device_pr->remove();
+        if(_device_pr->isModule()) {
+            _device_pr->disconnect();
+            _device_pr->remove();
+            _device_pr->deleteModule();
+        }
     }
     if (_device_gw != nullptr) {
-        _device_gw->disconnect();
-        _device_gw->remove();
+        if(_device_gw->isModule()) {
+            _device_gw->disconnect();
+            _device_gw->remove();
+            _device_gw->deleteModule();
+        }
     }
 }
 
@@ -43,8 +46,11 @@ void MembershipControl::initialize()
     _device_pr = createInitClusterDevice(ClusterDeviceType::MEMBER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE);
     _device_gw = createInitClusterDevice(ClusterDeviceType::GATEWAY_DEVICE, DeviceInterfaceType::GATEWAY_INTERFACE);
 
-    // Setup primary device to periodically scan for broadcast messages
     _event_scan_broadcast = new omnetpp::cMessage("EventScanBroadcast");
+    _event_publisher_update = new omnetpp::cMessage("EventPublisherUpdate");
+    _event_member_report = new omnetpp::cMessage("EventMemberReport");
+
+    // Setup primary device to periodically scan for broadcast messages
     double scan_duration = par("broadcastScanDuration").doubleValue();
     double scan_interval = par("broadcastScanInterval").doubleValue();
     scan_duration = (scan_duration < scan_interval)? (3.0 * scan_interval) : scan_duration;
@@ -207,9 +213,7 @@ void MembershipControl::handleBroadcastScanEvent() {
     else
         createNewConvoy();
 
-    _event_publisher_update = new omnetpp::cMessage("EventPublisherUpdate");
     scheduleAfter(par("publisherUpdateInterval").doubleValue(), _event_publisher_update);
-    _event_member_report = new omnetpp::cMessage("EventMemberReport");
     omnetpp::simtime_t current_time = omnetpp::simTime();
     double start_time = par("memberReportStartTime").doubleValue();
     omnetpp::simtime_t trigger_time = (current_time < start_time)? start_time : current_time;
@@ -229,6 +233,7 @@ void MembershipControl::createNewCluster(int id_convoy) {
     // But first clear up old device info if any
     _device_pr->disconnect();
     _device_pr->remove();
+    _device_pr->deleteModule();
     _device_pr = createInitClusterDevice(ClusterDeviceType::MASTER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE, id_convoy);
 
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
@@ -438,6 +443,7 @@ void MembershipControl::changeClusterMembership(Role role, int id_convoy, int id
             if(previous_role == Role::MANAGER) {
                 _device_pr->disconnect();
                 _device_pr->remove();
+                _device_pr->deleteModule();
                 _device_pr = createInitClusterDevice(ClusterDeviceType::MEMBER_DEVICE, DeviceInterfaceType::PRIMARY_INTERFACE, id_convoy);
             }
             double rssi{0.0};

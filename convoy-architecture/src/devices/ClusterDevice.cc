@@ -34,10 +34,6 @@ void ClusterDevice::remove() {
         Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
         binder->deRegisterCluster(_address_convoy, _address_manager);
     }
-
-    if(isModule())
-            deleteModule();
-
 }
 
 void ClusterDevice::setType(ClusterDeviceType device_type, DeviceInterfaceType interface_type){
