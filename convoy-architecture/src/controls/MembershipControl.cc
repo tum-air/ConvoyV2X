@@ -224,7 +224,7 @@ void MembershipControl::createNewConvoy() {
     // Create and notify a new convoy
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
     int id_convoy{binder->getMaxIdConvoy()};
-    binder->registerConvoy(id_convoy++);
+    binder->registerConvoy(++id_convoy);
     createNewCluster(id_convoy);
 }
 

@@ -46,6 +46,7 @@ void ClusterDevice::configureAndStart(int direction, int address_convoy) {
 
     // Finalize device configuration
     par("convoyDirection") = direction;
+    par("convoyID") = address_convoy;
     if(_interface_type != DeviceInterfaceType::PRIMARY_INTERFACE) {
         par("isPrimary") = false;
     }

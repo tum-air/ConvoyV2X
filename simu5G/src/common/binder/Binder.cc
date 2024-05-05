@@ -1370,7 +1370,7 @@ void Binder::deNotifyConvoy(int id)
 }
 int Binder::getMaxIdConvoy()
 {
-    int max_id = -1;
+    int max_id = 0;
     if(_id_list_convoys.size() > 0)
         max_id = *(std::max_element(_id_list_convoys.begin(), _id_list_convoys.end()));
     return(max_id);
