@@ -170,6 +170,16 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
 }
 
 void MembershipControl::handleBroadcastScanEvent() {
+    EV_INFO << "All broadcasts:" << std::endl;
+    for (auto bcast: _broadcasts_received) {
+        EV_INFO << "cv-id:" << bcast.id_convoy
+                << ", cl-id:" << bcast.id_cluster
+                << ", cv-full:" << bcast.full_convoy
+                << ", cl-full:" << bcast.full_cluster
+                << ", cv-dir:" << bcast.direction
+                << ", cl-rssi:" << bcast.rssi << std::endl;
+    }
+
     // Check for arrival of broadcast messages
     if(_broadcasts_received.size() > 0) {
         // Extract broadcasts from those clusters which are moving in the same direction
@@ -182,14 +192,32 @@ void MembershipControl::handleBroadcastScanEvent() {
             return (broadcast.direction == direction) && (broadcast.rssi >= min_rssi);
         });
 
+        EV_INFO << "Qualified broadcasts:" << std::endl;
+        for (auto bcast: qualified_broadcasts) {
+            EV_INFO << "cv-id:" << bcast.id_convoy
+                    << ", cl-id:" << bcast.id_cluster
+                    << ", cv-full:" << bcast.full_convoy
+                    << ", cl-full:" << bcast.full_cluster
+                    << ", cv-dir:" << bcast.direction
+                    << ", cl-rssi:" << bcast.rssi << std::endl;
+        }
         if(qualified_broadcasts.size() > 0)
         {
             // Sort the qualified in descending order of received signal strength
             std::sort(std::begin(qualified_broadcasts), std::end(qualified_broadcasts),
                     [] (Broadcast const& lhs, Broadcast const& rhs) {
-                return lhs.rssi < rhs.rssi;
+                return rhs.rssi < lhs.rssi;
             });
 
+            EV_INFO << "Sorted broadcasts:" << std::endl;
+            for (auto bcast: qualified_broadcasts) {
+                EV_INFO << "cv-id:" << bcast.id_convoy
+                        << ", cl-id:" << bcast.id_cluster
+                        << ", cv-full:" << bcast.full_convoy
+                        << ", cl-full:" << bcast.full_cluster
+                        << ", cv-dir:" << bcast.direction
+                        << ", cl-rssi:" << bcast.rssi << std::endl;
+            }
             // Iterate through the sorted list starting with the max rssi candidate
             bool joined_existing_convoy = false;
             for(auto candidate : qualified_broadcasts) {
@@ -312,8 +340,8 @@ void MembershipControl::sendMemberReport()
     msg->setCcs_report_id_convoy(_device_pr->getAddressOfConvoy());
     msg->setCcs_report_id_gnb(_device_pr->getAddressOfManager());
     msg->setCcs_report_id_ue(_device_pr->getAddress());
-    msg->setCcs_report_id_gnb(_device_gw->getAddressOfManager());
-    msg->setCcs_report_id_ue(_device_gw->getAddress());
+    msg->setCcs_report_id_gnb_gw(_device_gw->getAddressOfManager());
+    msg->setCcs_report_id_ue_gw(_device_gw->getAddress());
     msg->setCcs_report_role((int)_role);
     msg->setCcs_report_position_x(location.x);
     msg->setCcs_report_position_y(location.y);
@@ -362,6 +390,14 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
                     (ConvoyDirection) msg->getConvoyDirection(),
                     msg->getRssi()
         };
+
+        EV_INFO << "Broadcast received, cv-id:" << broadcast.id_convoy
+                << ", cl-id:" << broadcast.id_cluster
+                << ", cv-full:" << broadcast.full_convoy
+                << ", cl-full:" << broadcast.full_cluster
+                << ", cv-dir:" << broadcast.direction
+                << ", cl-rssi:" << broadcast.rssi << std::endl;
+
         // Replace existing entry if the cluster already exists , else create a new entry
         auto itr = std::find_if(std::begin(_broadcasts_received), std::end(_broadcasts_received), [&broadcast] (Broadcast const& val) {return val.id_cluster == broadcast.id_cluster;});
         if(itr != std::end(_broadcasts_received))
@@ -390,6 +426,23 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
                 else
                     _publishers.push_back(publisher);
             }
+        }
+
+        for (auto bcast: _broadcasts_received) {
+            EV_INFO << "cv-id:" << bcast.id_convoy
+                    << ", cl-id:" << bcast.id_cluster
+                    << ", cv-full:" << bcast.full_convoy
+                    << ", cl-full:" << bcast.full_cluster
+                    << ", cv-dir:" << bcast.direction
+                    << ", cl-rssi:" << bcast.rssi << std::endl;
+        }
+        for (auto publ: _publishers) {
+            EV_INFO << "pb-name:" << publ.name
+                    << ", pb-node-id:" << publ.id
+                    << ", pb-pos:" << publ.position
+                    << ", pb-fov:" << publ.fov
+                    << ", pb-dir:" << publ.direction
+                    << ", pb-cl-id:" << publ.cluster << std::endl;
         }
     }
 }

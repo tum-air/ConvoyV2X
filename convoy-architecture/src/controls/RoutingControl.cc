@@ -282,8 +282,6 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
     // 5. Else forward packet back to network for multi-hop routing
 
     auto transport_packet = network_packet->popAtFront<TransportPacket>();
-    int destination_address = transport_packet->getDst_mac_id();
-    MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
     if(par("stationType").intValue() == StationType::BACKEND) {
         if(type == MessageType::PUBLICATION) {
             ObjectList *msg_dtwin = transport_packet->getMsg_publisher().dup();
@@ -294,30 +292,35 @@ void RoutingControl::receiveFromNetwork(inet::Packet *network_packet, MessageTyp
             send(msg_member_status, "outUlMemberControl");
         }
     }
-    else if(membership_control->addressMatchesPrimaryDevice(destination_address) || membership_control->addressMatchesGatewayDevice(destination_address)) {
-        if(type == MessageType::SUBSCRIPTION) {
-            DtwinSub *msg_subscription = transport_packet->getMsg_subscriber().dup();
-            send(msg_subscription, "outUlPublisher");
-        }
-        else if(type == MessageType::PUBLICATION) {
-            ObjectList *msg_publisher = transport_packet->getMsg_publisher().dup();
-            send(msg_publisher, "outUlSubscriber");
-        }
-        else if(type == MessageType::MANEUVER) {
-            CoopManeuver *msg_maneuver = transport_packet->getMsg_maneuver().dup();
-            send(msg_maneuver, "outUlManeuver");
-        }
-        else if(type == MessageType::MEMBER_STATUS) {
-            MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
-            send(msg_member_status, "outUlMemberControl");
-        }
-        else if(type == MessageType::ORCHESTRATION) {
-            Orchestration *msg_orchestration = transport_packet->getMsg_orchestration().dup();
-            send(msg_orchestration, "outUlMemberControl");
-        }
-    }
     else {
-        forwardToNetwork(transport_packet->dup(), type);
+        int destination_address = transport_packet->getDst_mac_id();
+        MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
+        if(membership_control->addressMatchesPrimaryDevice(destination_address) || membership_control->addressMatchesGatewayDevice(destination_address)) {
+
+            if(type == MessageType::SUBSCRIPTION) {
+                DtwinSub *msg_subscription = transport_packet->getMsg_subscriber().dup();
+                send(msg_subscription, "outUlPublisher");
+            }
+            else if(type == MessageType::PUBLICATION) {
+                ObjectList *msg_publisher = transport_packet->getMsg_publisher().dup();
+                send(msg_publisher, "outUlSubscriber");
+            }
+            else if(type == MessageType::MANEUVER) {
+                CoopManeuver *msg_maneuver = transport_packet->getMsg_maneuver().dup();
+                send(msg_maneuver, "outUlManeuver");
+            }
+            else if(type == MessageType::MEMBER_STATUS) {
+                MemberStatus *msg_member_status = transport_packet->getMsg_member_status().dup();
+                send(msg_member_status, "outUlMemberControl");
+            }
+            else if(type == MessageType::ORCHESTRATION) {
+                Orchestration *msg_orchestration = transport_packet->getMsg_orchestration().dup();
+                send(msg_orchestration, "outUlMemberControl");
+            }
+        }
+        else {
+            forwardToNetwork(transport_packet->dup(), type);
+        }
     }
     delete network_packet;
 }

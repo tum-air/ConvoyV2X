@@ -64,7 +64,7 @@ void ClusterDevice::configureAndStart(int direction, int address_convoy) {
 
     // Use macNodeId assigned by binder as device address
     Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-    _address = par("macNodeId").intValue();
+    _address = (_device_type == ClusterDeviceType::MASTER_DEVICE)? par("macNodeId").intValue() : par("nrMacNodeId").intValue();
     _address_manager = binder->getNextHop(_address);
 
     // Update broadcast information
@@ -137,9 +137,8 @@ void ClusterDevice::joinNewCluster(int id_convoy, int id_cluster, double rssi) {
         nic->attachToCluster(id_cluster, rssi);
 
         // Use macNodeId assigned by binder as device address
-        Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
-        _address = par("macNodeId").intValue();
-        _address_manager = binder->getNextHop(_address);
+        _address = par("nrMacNodeId").intValue();
+        _address_manager = id_cluster;
         _address_convoy = id_convoy;
     }
 }

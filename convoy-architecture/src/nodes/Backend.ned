@@ -37,11 +37,12 @@ module Backend extends TransportLayerNodeBase
         routingControl: RoutingControl {
             @display("p=375,80;is=s");
             convoyDirection = parent.convoyDirection;
+            stationType = parent.stationType;
         }
         ioAppSubscriber: UdpSocketIo {
             @display("p=375,130;is=s");
             localPort = 21001;
-                destPort = 21002;
+            destPort = 21002;
         }
         ioAppMemberReport: UdpSocketIo {
             @display("p=250,100;is=s");

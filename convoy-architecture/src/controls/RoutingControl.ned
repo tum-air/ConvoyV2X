@@ -19,8 +19,8 @@ simple RoutingControl
         int destPortPublisher = default(21001);
         int destPortSubscriber = default(21002);
         int destPortManeuver = default(21003);
-        int destPortMemberReport = default(21004);
-        int destPortOrchestration = default(21005);
+        int destPortOrchestration = default(21004);
+        int destPortMemberReport = default(21005);
         @display("i=block/control");
         @class("convoy_architecture::RoutingControl");
     
