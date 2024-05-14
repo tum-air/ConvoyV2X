@@ -1,9 +1,3 @@
-/*
- * defs.h
- *
- *  Created on: Jun 8, 2023
- *      Author: simu5g
- */
 
 #ifndef COMMON_DEFS_H_
 #define COMMON_DEFS_H_

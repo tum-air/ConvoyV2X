@@ -11,7 +11,7 @@ simple Maneuver
         string egoID = default("rsu_001");
         string roiTag = default("neighborhood");
         string qosTag = default("ASIL-D");
-        double startTime @unit(s) = default(100.000s);
+        double startTime @unit(s) = default(500.000s);
         double stopTime @unit(s) = default(1000.000s);
         double updateRate @unit(s) = default(0.100s);
         double limitROINeighborhood @unit(m) = default(100m);

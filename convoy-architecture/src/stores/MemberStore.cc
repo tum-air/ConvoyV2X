@@ -69,6 +69,8 @@ void MemberStore::updateNodeCCSReports(MemberStatus *msg) {
     }
     else
         _member_ccs_record.push_back(member_info);
+
+    EV_INFO << "Member store size: " << _member_ccs_record.size() << std::endl;
 }
 
 void MemberStore::checkMemberExpiry() {
@@ -80,6 +82,8 @@ void MemberStore::checkMemberExpiry() {
     _member_ccs_record.erase(std::remove_if(std::begin(_member_ccs_record), std::end(_member_ccs_record),
             [&current_nsec, &max_age_nsec] (Node const& val) {return (current_nsec - val.timestamp) >= max_age_nsec;}),
             std::end(_member_ccs_record));
+
+    EV_INFO << "Member store size: " << _member_ccs_record.size() << std::endl;
 }
 
 const std::vector<Node>& MemberStore::readCCSReports() const
