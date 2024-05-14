@@ -94,17 +94,19 @@ ClusterDevice* MembershipControl::createInitClusterDevice(ClusterDeviceType devi
     // Connect device to base node
     if(device_type == ClusterDeviceType::GATEWAY_DEVICE)
         device->connectGatewayDeviceTo(getParentModule());
-    else
+    else {
         device->connectPrimaryDeviceTo(getParentModule());
 
-    // register to get a notification when broadcast messages arrive
-    if(device_type != ClusterDeviceType::MASTER_DEVICE) {
-        NRPhyUe *nic = check_and_cast<NRPhyUe *>(device->getSubmodule("cellularNic")->getSubmodule("nrPhy"));
-        nic->subscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
-    }
-    else {
-        LtePhyEnbD2D *nic = check_and_cast<LtePhyEnbD2D *>(device->getSubmodule("cellularNic")->getSubmodule("phy"));
-        nic->subscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
+        // register to get a notification when broadcast messages arrive
+        // only primary device is registered for broadcast reception notification
+        if(device_type != ClusterDeviceType::MASTER_DEVICE) {
+            NRPhyUe *nic = check_and_cast<NRPhyUe *>(device->getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+            nic->subscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
+        }
+        else {
+            LtePhyEnbD2D *nic = check_and_cast<LtePhyEnbD2D *>(device->getSubmodule("cellularNic")->getSubmodule("phy"));
+            nic->subscribe(LtePhyBase::clusterBroadcastReceivedSignal, this);
+        }
     }
 
     return device;
@@ -151,7 +153,7 @@ void MembershipControl::handleMessage(omnetpp::cMessage *msg)
     if(msg->isSelfMessage()) {
         if(event == std::string{"EventScanBroadcast"})
             handleBroadcastScanEvent();
-        else if((event == std::string{"EventPublisherUpdate"}) && (_device_pr->getDeviceType() == ClusterDeviceType::MASTER_DEVICE)) {
+        else if(event == std::string{"EventPublisherUpdate"}) {
             updatePublishers();
             scheduleAfter(par("publisherUpdateInterval").doubleValue(), _event_publisher_update);
         }
@@ -327,6 +329,7 @@ void MembershipControl::updatePublishers()
             _publishers.push_back(publisher);
     }
     _device_pr->updateBroadcastInfo(_publishers);
+    _device_gw->updateBroadcastInfo(_publishers);
 }
 
 void MembershipControl::sendMemberReport()

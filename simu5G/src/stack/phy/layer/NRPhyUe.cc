@@ -600,7 +600,7 @@ void NRPhyUe::handleSelfMessage(cMessage *msg)
                 return;
             // send convoy control broadcast message
             EV_INFO << current_time << " - NRPhyUe::handleSelfMessage(): sending cluster control message to " << masterId_ << std::endl;
-            LteAirFrame *f = createConvoyControlMessage();
+            LteAirFrame *f = createConvoyBroadcastMessage();
             UserControlInfo *control_info = check_and_cast<UserControlInfo *>(f->getControlInfo());
             control_info->setDirection(UL);
             control_info->setDestId(masterId_);

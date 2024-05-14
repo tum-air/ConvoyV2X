@@ -95,6 +95,11 @@ void ClusterDevice::updateBroadcastInfo(const std::vector<Publication> &publishe
         LtePhyEnbD2D *nic = check_and_cast<LtePhyEnbD2D *>(getSubmodule("cellularNic")->getSubmodule("phy"));
         nic->updateBroadcastParameters(publishers);
     }
+    else
+    {
+        NRPhyUe *nic = check_and_cast<NRPhyUe *>(getSubmodule("cellularNic")->getSubmodule("nrPhy"));
+        nic->updateBroadcastParameters(publishers);
+    }
 }
 
 void ClusterDevice::connectPrimaryDeviceTo(omnetpp::cModule *base_node) {
