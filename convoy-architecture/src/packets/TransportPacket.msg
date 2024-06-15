@@ -20,6 +20,7 @@ class TransportPacket extends inet::FieldsChunk
     int src_mac_id;
     int hop_mac_id;
     int dst_mac_id;
+    int msg_type;
     
     convoy_architecture::DtwinSub msg_subscriber;
     convoy_architecture::ObjectList msg_publisher;

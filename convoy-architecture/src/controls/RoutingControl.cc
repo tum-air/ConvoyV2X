@@ -45,7 +45,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
     EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlSubscriber") {
-        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+        if(getParentModule()->hasSubmodule("membershipControl")) {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
                 ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
@@ -97,6 +97,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                     transport_packet->setMsg_subscriber(*dtwin_sub_msg);
                     transport_packet->setChunkLength(inet::B(par("sizeSubscriberMsg").intValue()));
                     transport_packet->setDst_mac_id(p.id);
+                    transport_packet->setMsg_type(MessageType::SUBSCRIPTION);
                     forwardToNetwork(transport_packet, MessageType::SUBSCRIPTION);
                 });
                 delete msg;
@@ -107,8 +108,11 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
         else
             delete msg;
     }
-    else
-        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::SUBSCRIPTION);
+    else {
+        inet::Packet *network_packet = check_and_cast<inet::Packet *>(msg);
+        auto transport_packet = network_packet->peekAtFront<TransportPacket>();
+        receiveFromNetwork(network_packet, (MessageType) transport_packet->getMsg_type());
+    }
 }
 
 void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
@@ -117,7 +121,7 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
     EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlPublisher") {
-        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+        if(getParentModule()->hasSubmodule("membershipControl")) {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
                 SubscriberStore *store = check_and_cast<SubscriberStore *>(getParentModule()->getSubmodule("subscriberStore"));
@@ -131,6 +135,7 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                     transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
                     transport_packet->setMsg_publisher(*dtwin_pub_msg);
                     transport_packet->setDst_mac_id(s.id);
+                    transport_packet->setMsg_type(MessageType::PUBLICATION);
                     forwardToNetwork(transport_packet, MessageType::PUBLICATION);
                 });
                 // Send out a copy to the backend
@@ -140,6 +145,7 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                     transport_packet->setTimestamp(msg_dtwin->getTimestamp());
                     transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
                     transport_packet->setMsg_publisher(*msg_dtwin);
+                    transport_packet->setMsg_type(MessageType::PUBLICATION);
                     forwardToBackend(transport_packet, MessageType::PUBLICATION);
                 }
                 delete msg;
@@ -150,8 +156,11 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
         else
             delete msg;
     }
-    else
-        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::PUBLICATION);
+    else {
+        inet::Packet *network_packet = check_and_cast<inet::Packet *>(msg);
+        auto transport_packet = network_packet->peekAtFront<TransportPacket>();
+        receiveFromNetwork(network_packet, (MessageType) transport_packet->getMsg_type());
+    }
 }
 
 void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
@@ -160,7 +169,7 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
     EV_INFO << current_time <<" - RoutingControl::msgHandlerManeuver(): " << "Received message through gate " << arrival_gate << std::endl;
 
     if(arrival_gate == "inUlManeuver") {
-        if(getParentModule()->hasSubmoduleVector("membershipControl")) {
+        if(getParentModule()->hasSubmodule("membershipControl")) {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
                 TransportPacket *transport_packet = new TransportPacket();
@@ -169,6 +178,7 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
                 transport_packet->setChunkLength(inet::B(par("sizeManeuverMsg").intValue()));
                 transport_packet->setMsg_maneuver(*coop_man_msg);
                 transport_packet->setDst_mac_id(coop_man_msg->getPartner_address());
+                transport_packet->setMsg_type(MessageType::MANEUVER);
                 forwardToNetwork(transport_packet, MessageType::MANEUVER);
             }
             else
@@ -177,8 +187,11 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
         else
             delete msg;
     }
-    else
-        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::MANEUVER);
+    else {
+        inet::Packet *network_packet = check_and_cast<inet::Packet *>(msg);
+        auto transport_packet = network_packet->peekAtFront<TransportPacket>();
+        receiveFromNetwork(network_packet, (MessageType) transport_packet->getMsg_type());
+    }
 }
 
 void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
@@ -194,6 +207,7 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
             transport_packet->setTimestamp(msg_member_status->getTimestamp());
             transport_packet->setChunkLength(inet::B(par("sizeMemberReportMsg").intValue()));
             transport_packet->setMsg_member_status(*msg_member_status);
+            transport_packet->setMsg_type(MessageType::MEMBER_STATUS);
             forwardToBackend(transport_packet, MessageType::MEMBER_STATUS);
         }
         // Else it is sent to the publishers in the same cluster
@@ -220,6 +234,7 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
                 transport_packet->setChunkLength(inet::B(par("sizeMemberReportMsg").intValue()));
                 transport_packet->setMsg_member_status(*msg_member_status);
                 transport_packet->setDst_mac_id(p.id);
+                transport_packet->setMsg_type(MessageType::MEMBER_STATUS);
                 forwardToNetwork(transport_packet, MessageType::MEMBER_STATUS);
             });
             delete msg;
@@ -235,8 +250,11 @@ void RoutingControl::msgHandlerMemberReport(omnetpp::cMessage *msg) {
             delete msg;
         }
         // Else send it to next hop
-        else
-            receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::MEMBER_STATUS);
+        else {
+            inet::Packet *network_packet = check_and_cast<inet::Packet *>(msg);
+            auto transport_packet = network_packet->peekAtFront<TransportPacket>();
+            receiveFromNetwork(network_packet, (MessageType) transport_packet->getMsg_type());
+        }
     }
 }
 
@@ -254,6 +272,7 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
         transport_packet->setMsg_orchestration(*msg_orchestration);
         transport_packet->setDst_mac_id(msg_orchestration->getNode_address());
         transport_packet->setHop_mac_id(msg_orchestration->getHop_address());
+        transport_packet->setMsg_type(MessageType::ORCHESTRATION);
         forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
     }
     else if(arrival_gate == "inBkndMemberControl") {
@@ -269,8 +288,9 @@ void RoutingControl::msgHandlerOrchestration(omnetpp::cMessage *msg) {
             forwardToNetwork(transport_packet, MessageType::ORCHESTRATION);
     }
     else {
-        // Message received from lower layer
-        receiveFromNetwork(check_and_cast<inet::Packet *>(msg), MessageType::ORCHESTRATION);
+        inet::Packet *network_packet = check_and_cast<inet::Packet *>(msg);
+        auto transport_packet = network_packet->peekAtFront<TransportPacket>();
+        receiveFromNetwork(network_packet, (MessageType) transport_packet->getMsg_type());
     }
 }
 
