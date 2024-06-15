@@ -45,6 +45,7 @@ module ClusterDevice
         
     gates:
         input radioIn @directIn;
+        input nrRadioIn @directIn;
         input fromAppPublisher;
         output toAppPublisher;
         input fromAppSubscriber;
@@ -125,6 +126,7 @@ module ClusterDevice
     connections allowunconnected:
         // physical layer
         cellularNic.radioIn <-- radioIn;
+        cellularNic.nrRadioIn <-- nrRadioIn;
         
         // network layer
         ipv4.ifIn <-- dispatcher_nl.out++;

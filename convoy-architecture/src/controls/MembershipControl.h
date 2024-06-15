@@ -46,6 +46,8 @@ public:
     const std::vector<Publication>& readPublishers() const;
     int getAddressOfManagerForPrimaryDevice() {return (_device_pr == nullptr)? 0 : _device_pr->getAddressOfManager();}
     int getAddressOfManagerForGatewayDevice() {return (_device_gw == nullptr)? 0 : _device_gw->getAddressOfManager();}
+    int getAddressOfPrimaryDevice() {return (_device_pr == nullptr)? 0 : _device_pr->getAddress();}
+    int getAddressOfGatewayDevice() {return (_device_gw == nullptr)? 0 : _device_gw->getAddress();}
     bool addressMatchesPrimaryDevice(int address) {return (_device_pr == nullptr)? false : (address==_device_pr->getAddress());}
     bool addressMatchesGatewayDevice(int address) {return (_device_gw == nullptr)? false : (address==_device_gw->getAddress());}
     ClusterDeviceType clusterMatch(int cluster_address);

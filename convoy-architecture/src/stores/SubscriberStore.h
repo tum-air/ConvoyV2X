@@ -17,7 +17,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
     void updateSubscriberList(DtwinSub *msg);
 
     omnetpp::cMessage *_subscriber_expiry_check_event{nullptr};
-    std::vector<Subscription> _subscriber_record;
+    std::vector<Subscription> _subscriber_record{};
 
   public:
     ~SubscriberStore() {
@@ -25,7 +25,7 @@ class SubscriberStore : public omnetpp::cSimpleModule
             cancelAndDelete(_subscriber_expiry_check_event);
         _subscriber_expiry_check_event = nullptr;
     }
-    const std::vector<Subscription>& readSubscriptions() const;
+    std::vector<Subscription> readSubscriptions();
 };
 
 } // namespace convoy_architecture

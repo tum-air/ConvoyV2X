@@ -35,11 +35,14 @@ void SubscriberStore::handleMessage(omnetpp::cMessage *msg)
     {
         EV_INFO << current_time <<" - SubscriberStore::handleMessage(): " << "External message received through input gate " << std::endl;
         DtwinSub *msg_dtwin_sub = check_and_cast<DtwinSub *>(msg);
-        delete msg_dtwin_sub;
+        updateSubscriberList(msg_dtwin_sub);
+        delete msg;
     }
 }
 
 void SubscriberStore::updateSubscriberList(DtwinSub *msg) {
+    omnetpp::simtime_t current_time = omnetpp::simTime();
+
     // Edit existing entry if the node already exists and if the time stamp is more recent, else create a new entry
     Subscription subscriber {
         std::string{msg->getSubscriber_id()},
@@ -57,6 +60,10 @@ void SubscriberStore::updateSubscriberList(DtwinSub *msg) {
     }
     else
         _subscriber_record.push_back(subscriber);
+
+    EV_INFO << current_time <<" - SubscriberStore::updateSubscriberList(): " << "Subscriber record " << std::endl;
+    for(auto sub:_subscriber_record)
+        EV_INFO << sub.name << ", " << sub.id << std::endl;
 }
 
 void SubscriberStore::checkSubscriberExpiry() {
@@ -70,7 +77,7 @@ void SubscriberStore::checkSubscriberExpiry() {
             std::end(_subscriber_record));
 }
 
-const std::vector<Subscription>& SubscriberStore::readSubscriptions() const
+std::vector<Subscription> SubscriberStore::readSubscriptions()
 {
     return _subscriber_record;
 }

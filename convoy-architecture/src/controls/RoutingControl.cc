@@ -65,6 +65,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                 std::vector<Publication> publishers_filtered;
                 if(!app_localizer->isLocalized()) {
                     // send request to all publishers in the same direction and which are in the same cluster
+                    EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Node not yet localized, sending subscription request to all known publishers in the cluster" << std::endl;
                     int cluster = membership_control->getAddressOfManagerForPrimaryDevice();
                     std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [cluster] (Publication const& p) {
                         return (p.cluster == cluster);
@@ -90,20 +91,26 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                 }
 
                 // Send out the subscription requests
-                std::for_each(std::begin(publishers_filtered), std::end(publishers_filtered), [this, msg] (Publication const& p) {
+                std::for_each(std::begin(publishers_filtered), std::end(publishers_filtered), [this, msg, membership_control, current_time] (Publication const& p) {
                     TransportPacket *transport_packet = new TransportPacket();
                     DtwinSub *dtwin_sub_msg = check_and_cast<DtwinSub *>(msg->dup());
+                    // set subscriber address
+                    dtwin_sub_msg->setSubscriber_address(membership_control->getAddressOfPrimaryDevice());
                     transport_packet->setTimestamp(dtwin_sub_msg->getTimestamp());
                     transport_packet->setMsg_subscriber(*dtwin_sub_msg);
                     transport_packet->setChunkLength(inet::B(par("sizeSubscriberMsg").intValue()));
                     transport_packet->setDst_mac_id(p.id);
                     transport_packet->setMsg_type(MessageType::SUBSCRIPTION);
                     forwardToNetwork(transport_packet, MessageType::SUBSCRIPTION);
+
+                    EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Sent subscription request to publisher: " << p.name << std::endl;
                 });
                 delete msg;
             }
-            else
+            else {
+                EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "MembershipControl not yet initialized, deleting message" << std::endl;
                 delete msg;
+            }
         }
         else
             delete msg;
@@ -124,34 +131,41 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
         if(getParentModule()->hasSubmodule("membershipControl")) {
             MembershipControl* membership_control = check_and_cast<MembershipControl *>(getParentModule()->getSubmodule("membershipControl"));
             if(membership_control->isInitialized()) {
+                ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
                 SubscriberStore *store = check_and_cast<SubscriberStore *>(getParentModule()->getSubmodule("subscriberStore"));
-                const std::vector<Subscription>& subscribers = store->readSubscriptions();
+                std::vector<Subscription> subscribers = store->readSubscriptions();
 
-                // Send out the dtwin publications to the subcribers
-                std::for_each(std::begin(subscribers), std::end(subscribers), [this, msg] (Subscription const& s) {
+                // Send out the dtwin publications to the subscribers
+                for (auto s : subscribers) {
                     TransportPacket *transport_packet = new TransportPacket();
-                    ObjectList *dtwin_pub_msg = check_and_cast<ObjectList *>(msg->dup());
-                    transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
+                                        ObjectList *dtwin_pub_msg = msg_dtwin->dup();
+
+
+                                                            transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
                     transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
                     transport_packet->setMsg_publisher(*dtwin_pub_msg);
                     transport_packet->setDst_mac_id(s.id);
                     transport_packet->setMsg_type(MessageType::PUBLICATION);
                     forwardToNetwork(transport_packet, MessageType::PUBLICATION);
-                });
+
+                }
+
                 // Send out a copy to the backend
                 if(par("stationType").intValue() == StationType::RSU) {
                     TransportPacket *transport_packet = new TransportPacket();
-                    ObjectList *msg_dtwin = check_and_cast<ObjectList *>(msg);
-                    transport_packet->setTimestamp(msg_dtwin->getTimestamp());
-                    transport_packet->setChunkLength(inet::B(msg_dtwin->getObj_byte_size() * msg_dtwin->getN_objects()));
-                    transport_packet->setMsg_publisher(*msg_dtwin);
+                    ObjectList *dtwin_pub_msg = msg_dtwin->dup();
+                    transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
+                    transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
+                    transport_packet->setMsg_publisher(*dtwin_pub_msg);
                     transport_packet->setMsg_type(MessageType::PUBLICATION);
                     forwardToBackend(transport_packet, MessageType::PUBLICATION);
                 }
+                delete msg_dtwin;
+            }
+            else {
+                EV_INFO << current_time <<" - RoutingControl::msghandlerPublisher(): " << "MembershipControl not yet initialized, deleting message" << std::endl;
                 delete msg;
             }
-            else
-                delete msg;
         }
         else
             delete msg;
@@ -181,8 +195,10 @@ void RoutingControl::msgHandlerManeuver(omnetpp::cMessage *msg) {
                 transport_packet->setMsg_type(MessageType::MANEUVER);
                 forwardToNetwork(transport_packet, MessageType::MANEUVER);
             }
-            else
+            else {
+                EV_INFO << current_time <<" - RoutingControl::msgHandlerManeuver(): " << "MembershipControl not yet initialized, deleting message" << std::endl;
                 delete msg;
+            }
         }
         else
             delete msg;
@@ -424,6 +440,8 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
     // Prepare and send inet Packet
     hop_mac_id = transport_packet->getHop_mac_id();
     inet::Packet *packet = new inet::Packet(packet_name.c_str());
+    EV_INFO << packet_name << ", " << hop_mac_id <<  ", " << par(dest_port.c_str()) << ", " << out_gate << std::endl;
+
     packet->insertAtBack(inet::makeShared<TransportPacket>(*transport_packet));
     omnetpp::cModule *destination_module = getSimulation()->getModule(binder->getOmnetId((MacNodeId) hop_mac_id));
     inet::L3Address destination_address = inet::L3AddressResolver().resolve(destination_module->getFullName());
