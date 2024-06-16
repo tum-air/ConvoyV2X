@@ -9,7 +9,7 @@ simple Subscriber
 {
     parameters:
         volatile string subscriberID  = default("rsu_001");
-        volatile string roiTag = default("horizon");
+        volatile string roiTag = default("nearby");
         volatile string qosTag = default("ASIL-D");
         volatile double startTime @unit(s) = default(100.000s);
         volatile double stopTime @unit(s) = default(1000.000s);

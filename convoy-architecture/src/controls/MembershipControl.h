@@ -43,7 +43,7 @@ private:
 
 public:
     bool isInitialized() {return (_control_state == MemberControlState::INITIALIZED);}
-    const std::vector<Publication>& readPublishers() const;
+    std::vector<Publication> readPublishers();
     int getAddressOfManagerForPrimaryDevice() {return (_device_pr == nullptr)? 0 : _device_pr->getAddressOfManager();}
     int getAddressOfManagerForGatewayDevice() {return (_device_gw == nullptr)? 0 : _device_gw->getAddressOfManager();}
     int getAddressOfPrimaryDevice() {return (_device_pr == nullptr)? 0 : _device_pr->getAddress();}

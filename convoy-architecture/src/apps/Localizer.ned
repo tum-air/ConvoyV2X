@@ -14,8 +14,8 @@ simple Localizer
         double startTime @unit(s) = default(90.000s);
         double stopTime @unit(s) = default(1000.000s);
         double updateRate @unit(s) = default(0.100s);
-        double minDurationLocalization @unit(s) = default(2.000s);
-        double maxAgeLocalization @unit(s) = default(2.0s);
+        double minDurationLocalization @unit(s) = default(4.000s);
+        double maxAgeLocalization @unit(s) = default(4.0s);
         string strategyLocalization = default("VISUAL_CUE");
         @application;
         @display("i=block/routing");

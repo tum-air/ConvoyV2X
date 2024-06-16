@@ -66,6 +66,7 @@ void Localizer::handleMessage(omnetpp::cMessage *msg)
         if (msg == _start_event)
         {
             EV_INFO << current_time <<" - Localizer::handleMessage(): " << "Starting localization application" << std::endl;
+            _init_time = current_time;
         }
         else if (msg == _update_event)
         {
@@ -110,7 +111,6 @@ void Localizer::localizationStateUpdate()
     switch (_state)
     {
     case STATE_INIT:
-        _init_time = current_time;
         _state = STATE_LOCALIZING;
         break;
     case STATE_LOCALIZING:
@@ -125,8 +125,10 @@ void Localizer::localizationStateUpdate()
         // Check for maximum localization age
         // For cases where digital twin is not available due to track losses
         // Or is not transferred due to network packet losses
+        /*
         if (omnetpp::simtime_t::fromRaw(object_age).dbl() > _max_age_localization)
             _state = STATE_INIT;
+            */
         break;
     default:
         break;

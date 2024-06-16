@@ -354,7 +354,7 @@ void MembershipControl::sendMemberReport()
     send(msg, "out");
 }
 
-const std::vector<Publication>& MembershipControl::readPublishers() const
+std::vector<Publication> MembershipControl::readPublishers()
 {
     return _publishers;
 }
@@ -410,6 +410,7 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
 
         // Update publisher details if received signal strength is above threshold
         if(msg->getRssi() >= par("minRSSIClusterManager").doubleValue()) {
+
             Binder *binder = check_and_cast<Binder *>(getSystemModule()->getSubmodule("binder"));
             for(int i=0; i<msg->getPublisherNodeIDArraySize(); i++) {
                 Publication publisher {
@@ -417,7 +418,7 @@ void MembershipControl::receiveSignal(omnetpp::cComponent *source, omnetpp::sims
                             msg->getPublisherNodeID(i),
                             inet::Coord{msg->getPublisherNodeX(i), msg->getPublisherNodeY(i), 0.0},
                             msg->getPublisherFOV(i),
-                            (ConvoyDirection) msg->getConvoyDirection(),
+                            (ConvoyDirection) msg->getPublisherDirection(i),
                             binder->getNextHop(msg->getPublisherNodeID(i))
                 };
 

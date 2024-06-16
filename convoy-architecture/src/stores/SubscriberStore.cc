@@ -1,5 +1,6 @@
 
 #include "SubscriberStore.h"
+#include "DtwinStore.h"
 
 namespace convoy_architecture {
 
@@ -43,17 +44,23 @@ void SubscriberStore::handleMessage(omnetpp::cMessage *msg)
 void SubscriberStore::updateSubscriberList(DtwinSub *msg) {
     omnetpp::simtime_t current_time = omnetpp::simTime();
 
+    // Update address of subscriber in dtwin store
+    std::string subscriber_name{msg->getSubscriber_id()};
+    int subscriber_address{msg->getSubscriber_address()};
+    std::string subscriber_type{msg->getSubscriber_type()};
+    DtwinStore *dtwin_store = omnetpp::check_and_cast<DtwinStore*>(this->getParentModule()->getSubmodule("dtwinStore"));
+    dtwin_store->updateObjectTypeAndAddress(subscriber_name, subscriber_type, subscriber_address);
+
     // Edit existing entry if the node already exists and if the time stamp is more recent, else create a new entry
     Subscription subscriber {
-        std::string{msg->getSubscriber_id()},
-        msg->getSubscriber_address(),
+        subscriber_name,
+        subscriber_address,
         std::string{msg->getRoi_tag()},
         std::string{msg->getQos_tag()},
         msg->getTimestamp()
     };
 
-    std::string node_name = subscriber.name;
-    auto it = std::find_if(std::begin(_subscriber_record), std::end(_subscriber_record), [&node_name] (Subscription const& val) {return val.name == node_name;});
+    auto it = std::find_if(std::begin(_subscriber_record), std::end(_subscriber_record), [&subscriber_name] (Subscription const& val) {return val.name == subscriber_name;});
     if(it != std::end(_subscriber_record)) {
         if((*it).timestamp < subscriber.timestamp)
             (*it) = subscriber;

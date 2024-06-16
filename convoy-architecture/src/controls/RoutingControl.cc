@@ -51,12 +51,12 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                 ConvoyDirection direction = (ConvoyDirection) par("convoyDirection").intValue();
 
                 // Get the dtwin publisher infos
-                const std::vector<Publication>& publishers = membership_control->readPublishers();
+                std::vector<Publication> publishers = membership_control->readPublishers();
 
                 // Decide which publishers are to receive the subscription request
                 // First extract those publishers which cover the same direction
                 std::vector<Publication> publishers_same_direction;
-                std::copy_if(std::begin(publishers), std::end(publishers), std::back_inserter(publishers_same_direction), [direction] (Publication const& p) {
+                std::copy_if(std::begin(publishers), std::end(publishers), std::back_inserter(publishers_same_direction), [direction, this] (Publication const& p) {
                     return (p.direction == direction);
                 });
 
@@ -79,7 +79,7 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                     double ego_fov = par("roiNearby").doubleValue();
                     if (roi == std::string("horizon"))
                         ego_fov = par("roiHorizon").doubleValue();
-                    std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [ego_x, ego_fov] (Publication const& p) {
+                    std::copy_if(std::begin(publishers_same_direction), std::end(publishers_same_direction), std::back_inserter(publishers_filtered), [this, ego_x, ego_fov] (Publication const& p) {
                         double border_ego_min = ego_x - ego_fov;
                         double border_ego_max = ego_x + ego_fov;
                         double border_rsu_min = p.position.x - p.fov;
@@ -102,7 +102,6 @@ void RoutingControl::msgHandlerSubscriber(omnetpp::cMessage *msg) {
                     transport_packet->setDst_mac_id(p.id);
                     transport_packet->setMsg_type(MessageType::SUBSCRIPTION);
                     forwardToNetwork(transport_packet, MessageType::SUBSCRIPTION);
-
                     EV_INFO << current_time <<" - RoutingControl::msgHandlerSubscriber(): " << "Sent subscription request to publisher: " << p.name << std::endl;
                 });
                 delete msg;
@@ -138,10 +137,8 @@ void RoutingControl::msghandlerPublisher(omnetpp::cMessage *msg) {
                 // Send out the dtwin publications to the subscribers
                 for (auto s : subscribers) {
                     TransportPacket *transport_packet = new TransportPacket();
-                                        ObjectList *dtwin_pub_msg = msg_dtwin->dup();
-
-
-                                                            transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
+                    ObjectList *dtwin_pub_msg = msg_dtwin->dup();
+                    transport_packet->setTimestamp(dtwin_pub_msg->getTimestamp());
                     transport_packet->setChunkLength(inet::B(dtwin_pub_msg->getObj_byte_size() * dtwin_pub_msg->getN_objects()));
                     transport_packet->setMsg_publisher(*dtwin_pub_msg);
                     transport_packet->setDst_mac_id(s.id);
@@ -365,6 +362,7 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
     // 1. Find next hop for the transport packet
     // 2. Create new inet packet and transfer to corresponding NIC
 
+    omnetpp::simtime_t current_time = omnetpp::simTime();
     std::string packet_name{""}, dest_port{""}, out_gate{""};
     int chunk_length{0}, hop_mac_id{0};
     if(type == MessageType::SUBSCRIPTION) {
@@ -440,8 +438,6 @@ void RoutingControl::forwardToNetwork(TransportPacket *transport_packet, Message
     // Prepare and send inet Packet
     hop_mac_id = transport_packet->getHop_mac_id();
     inet::Packet *packet = new inet::Packet(packet_name.c_str());
-    EV_INFO << packet_name << ", " << hop_mac_id <<  ", " << par(dest_port.c_str()) << ", " << out_gate << std::endl;
-
     packet->insertAtBack(inet::makeShared<TransportPacket>(*transport_packet));
     omnetpp::cModule *destination_module = getSimulation()->getModule(binder->getOmnetId((MacNodeId) hop_mac_id));
     inet::L3Address destination_address = inet::L3AddressResolver().resolve(destination_module->getFullName());
