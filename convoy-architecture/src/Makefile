@@ -35,50 +35,36 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 # Object files for local .cc, .msg and .sm files
 OBJS = \
     $O/apps/ConvoyOrchestration.o \
-    $O/apps/CooperativeManeuver.o \
     $O/apps/Detector.o \
-    $O/apps/DtwinPublisher.o \
-    $O/apps/DtwinSubscriber.o \
     $O/apps/Localizer.o \
     $O/apps/Maneuver.o \
     $O/apps/Publisher.o \
     $O/apps/Subscriber.o \
     $O/apps/Tracker.o \
-    $O/controls/ConvoyControl.o \
     $O/controls/MembershipControl.o \
-    $O/controls/MessagingControl.o \
     $O/controls/RoutingControl.o \
     $O/devices/ClusterDevice.o \
-    $O/interfaces/BackendMessaging.o \
-    $O/interfaces/MultipleInputSingleOutput.o \
     $O/nodes/BaseNode.o \
-    $O/nodes/WrapperNode.o \
     $O/scenarios/highway/HighwayScenario.o \
     $O/stores/DtwinStore.o \
     $O/stores/MemberStore.o \
     $O/stores/SubscriberStore.o \
-    $O/world/synthetic/SyntheticWorld.o \
-    $O/world/test/TestWorld.o \
-    $O/messages/ConvoyControlFeedback_m.o \
     $O/messages/ConvoyControlService_m.o \
     $O/messages/CoopManeuver_m.o \
     $O/messages/DtwinSub_m.o \
     $O/messages/MemberStatus_m.o \
     $O/messages/ObjectList_m.o \
     $O/messages/Orchestration_m.o \
-    $O/packets/MCSPacket_m.o \
     $O/packets/TransportPacket_m.o
 
 # Message files
 MSGFILES = \
-    messages/ConvoyControlFeedback.msg \
     messages/ConvoyControlService.msg \
     messages/CoopManeuver.msg \
     messages/DtwinSub.msg \
     messages/MemberStatus.msg \
     messages/ObjectList.msg \
     messages/Orchestration.msg \
-    packets/MCSPacket.msg \
     packets/TransportPacket.msg
 
 # SM files
